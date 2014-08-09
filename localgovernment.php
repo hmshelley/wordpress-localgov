@@ -40,16 +40,18 @@ function lg_load_class( $class ) {
 	require_once( $file );
 }
 
-if ( function_exists( 'spl_autoload_register' ) ) {
-	spl_autoload_register( 'lg_load_class' );
-}
+//if ( function_exists( 'spl_autoload_register' ) ) {
+//	spl_autoload_register( 'lg_load_class' );
+//}
 
+lg_load_class( 'localgovernment\LocalGovernment' );
 register_activation_hook( __FILE__, array( 'localgovernment\LocalGovernment', 'plugin_activation' ) );
 register_deactivation_hook( __FILE__, array( 'localgovernment\LocalGovernment', 'plugin_deactivation' ) );
 
 add_action( 'plugins_loaded', array( 'localgovernment\LocalGovernment', 'load_modules' ) );
 add_action( 'widgets_init', array( 'localgovernment\LocalGovernment', 'load_widgets' ) );
 
+lg_load_class( 'localgovernment\ThemeOptions' );
 add_action( 'after_setup_theme', array( 'localgovernment\ThemeOptions', 'setup_page' ) );
 
 /**

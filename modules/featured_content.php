@@ -1,5 +1,7 @@
 <?php
 
+namespace localgovernment;
+
 class FeaturedContent_Module {
 	
 	/**

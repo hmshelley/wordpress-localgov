@@ -2,19 +2,21 @@
 
 namespace localgovernment;
 
-class PageMenu_Widget extends \WP_Widget {
+class Submenu_Widget extends \WP_Widget {
 
 	public static $start_depth = 1;
+	public static $max_depth = 3;
+
 
 	/**
 	 * Register widget with Wordpress
 	 */
 	function __construct() {
 		parent::__construct(
-			'PageMenuWidget',
-			__('LG: Page Menu', 'localgovernment'),
+			'SubmenuWidget',
+			__('LG: Submenu', 'localgovernment'),
 			array( 
-				'description' => __( 'Displays a menu using page heirarchy.', 'localgovernment')
+				'description' => __( 'Displays a submenu according to current post/page.', 'localgovernment')
 			)
 		);
 	}
@@ -30,14 +32,11 @@ class PageMenu_Widget extends \WP_Widget {
 	 */
 	public function widget( $args, $instance ) {
 		
-		if( !is_page() ) {
-			return;
-		}
-		
 		$title = apply_filters( 'widget_title', $instance['title'] );
-		
-		$start_depth = self::$start_depth;
+			
 		$depth = 2;
+		$start_depth = self::$start_depth;
+		$max_depth = self::$max_depth;
 		
 		if( 
 			isset( $instance['start_depth'] ) 
@@ -45,38 +44,38 @@ class PageMenu_Widget extends \WP_Widget {
 		) {
 			$start_depth = $instance['start_depth'];
 		}
-
-		$page = get_post();
 		
-		$page_ids = array_reverse( get_ancestors( $page->ID, 'page' ) );
-		array_push( $page_ids, $page->ID );
+		if( 
+			isset( $instance['max_depth'] ) 
+			&& is_numeric( $instance['max_depth'] )
+		) {
+			$max_depth = $instance['max_depth'];
+		}
 		
-		if( count( $page_ids ) < $start_depth )
-		{
+		$nav_menu = wp_nav_menu(array(
+			'menu'              => 'primary',
+			'theme_location'    => 'primary',
+			'depth'             => $depth,
+			'menu_class'        => 'menu-list',
+			'fallback_cb'       => 'wp_bootstrap_navwalker::fallback',
+			'lg_submenu'	=> true,
+			'lg_start_depth' => $start_depth,
+			'lg_max_depth'	=> $max_depth,
+			'echo' => false
+			
+		));
+		
+		if(empty($nav_menu) ) {
 			return;
 		}
 		
-		$child_of = $page_ids[$start_depth - 1];
-		
-		$children = wp_list_pages("title_li=&child_of=".$child_of."&depth=" . $depth . "&echo=0");
-		$post_title = '<a href="' . get_permalink( $child_of ) . '">' . get_the_title( $child_of ) . '</a>';
-		
-		if( !$children ) {
-			return;
-		}
-
 		echo $args['before_widget'];
 		
 		if( !empty( $instance['title']) ) {
 			echo $args['before_title'] . $title . $args['after_title'];
 		}
-		else {
-			echo $args['before_title'] . $post_title . $args['after_title'];
-		}
 		
-		echo '<ul class="menu-list">';
-		echo $children;
-		echo '</ul>';
+		echo $nav_menu;
 		
 		echo $args['after_widget'];
 	}
@@ -93,7 +92,8 @@ class PageMenu_Widget extends \WP_Widget {
 		
 		$instance = wp_parse_args((array) $instance, array(
 			'title' => '',
-			'start_depth' => self::$start_depth
+			'start_depth' => self::$start_depth,
+			'max_depth' => self::$max_depth
 		));
 ?>
 <p>
@@ -102,7 +102,11 @@ class PageMenu_Widget extends \WP_Widget {
 </p>
 <p>
 	<label for="<?php echo $this->get_field_id( 'start_depth' ); ?>"><?php _e( 'Start Depth:' ); ?>
-	<input id="<?php echo $this->get_field_id( 'start_depth' ); ?>" name="<?php echo $this->get_field_name('start_depth'); ?>" type="text" value="<?php echo esc_attr( $instance['start_depth'] ); ?>" size="2">
+	<input id="<?php echo $this->get_field_id( 'start_depth' ); ?>" name="<?php echo $this->get_field_name('start_depth'); ?>" type="text" value="<?php echo $instance['start_depth']; ?>" size="2">
+</p>
+<p>
+	<label for="<?php echo $this->get_field_id( 'max_depth' ); ?>"><?php _e( 'Max Depth:' ); ?>
+	<input id="<?php echo $this->get_field_id( 'max_depth' ); ?>" name="<?php echo $this->get_field_name('max_depth'); ?>" type="text" value="<?php echo $instance['max_depth']; ?>" size="2">
 </p>
 <?php
 	}
@@ -122,9 +126,10 @@ class PageMenu_Widget extends \WP_Widget {
 		$instance = array();
 		$instance['title'] = ( !empty( $new_instance['title'] ) ) ? strip_tags( $new_instance['title'] ) : '';
 		$instance['start_depth'] = ( isset( $new_instance['start_depth'] ) ) ? strip_tags( $new_instance['start_depth'] ) : '';
+		$instance['max_depth'] = ( isset( $new_instance['max_depth'] ) ) ? strip_tags( $new_instance['max_depth'] ) : '';
 		
 		return $instance;
 	}
 }
 
-register_widget( 'localgovernment\PageMenu_Widget' );
+register_widget( 'localgovernment\Submenu_Widget' );

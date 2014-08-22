@@ -9,12 +9,14 @@ class LocalGovernment {
 	static $modules = array(
 		'meetings',
 		'newsletters',
-		'featured_content'
+		'featured_content',
+		'submenus'
 	);
 	
 	static $widgets = array(
 		'twitter',
-		'page_menu'
+		'page_menu',
+		'submenu'
 	);
 
 	private function __construct() {
@@ -68,7 +70,7 @@ class LocalGovernment {
 			$path = self::get_module_path( $module );
 			
 			if ( !file_exists( $path ) ) {
-			
+				die($path);
 				throw new \LG_Class_Not_Found_Exception( $path );
 			}
 		
@@ -116,7 +118,6 @@ class LocalGovernment {
 			
 			if ( !file_exists( $path ) ) {
 				
-				die(var_dump($path));
 				throw new \LG_Class_Not_Found_Exception( $path );
 			}
 		

@@ -91,7 +91,7 @@ class Submenu_Widget extends \WP_Widget {
 	public function form( $instance ) {
 		
 		$instance = wp_parse_args((array) $instance, array(
-			'title' => '',
+			'title' => 'Menu',
 			'start_depth' => self::$start_depth,
 			'max_depth' => self::$max_depth
 		));

@@ -26,10 +26,18 @@ class FeaturedContent_Module {
 	}
 
 	public function setup() {
+		add_action( 'after_setup_theme', array( __CLASS__, 'after_setup_theme' ) );
 		add_action( 'init', array( __CLASS__, 'init' ), 30 );
 	}
 	
-	public static function init() {
+	public static function after_setup_theme() {
+		add_post_type_support( 'post', 'excerpt' );
+		add_post_type_support( 'page', 'excerpt' );
+	
+		add_theme_support( 'post-thumbnails' );
+	}
+	
+	public static function init() {	
 		
 		add_filter( 'lg_get_featured_posts', array( __CLASS__, 'get_featured_posts' ) );
 
@@ -44,10 +52,10 @@ class FeaturedContent_Module {
 				'featured' => new \Fieldmanager_Checkbox( 'Featured in front page slideshow', array(
 					'index' => LG_PREFIX . 'featured'
 				) ),
-				'exclude' => new \Fieldmanager_Checkbox( 'Exclude from front page', array(
+				'exclude' => new \Fieldmanager_Checkbox( 'Exclude from article list on front page', array(
 					'index' => LG_PREFIX . 'exclude_front_page'
 				) ),
-				'title' => new \Fieldmanager_Textfield( 'Featured Title' ),
+				'title' => new \Fieldmanager_Textfield( 'Featured Title (to use instead of page/post title)' ),
 				
 			)
 		) );

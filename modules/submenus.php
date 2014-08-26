@@ -42,7 +42,9 @@ class Submenus_Module {
 			$start_depth = $args->lg_start_depth;
 		}
 		
-		$current = array_pop( wp_filter_object_list( $items, array( 'current' => true ) ) );
+		$current = array_pop( wp_filter_object_list( $items, array( 
+			'current' => true
+		) ) );
 		
 		$current_depth = 0;
 		$parent = $current;
@@ -50,34 +52,38 @@ class Submenus_Module {
 			$parent = array_pop( wp_filter_object_list( $items, array( 'ID' => $parent->menu_item_parent ) ) );
 			$ancestors[] = $parent;
 			$current_depth++;
-		}    
+		}
 	
 		if( $current_depth < $start_depth ) {
 			return;
 		}
 
 		$siblings = wp_filter_object_list( $items, array( 
-			'current' => true,
 			'menu_item_parent' => $current->menu_item_parent
-		), 'OR' );
+		) );
 		
 		if( $current_depth == $start_depth) {
 			$siblings = array();
 		}
-		
+
 		if( $max_depth != 0 && $current_depth >= $max_depth ) {
 			$ancestors = array_reverse( $ancestors );
 			
 			$parent_siblings = wp_filter_object_list( $items, array( 'menu_item_parent' => $ancestors[$max_depth - 1]->menu_item_parent ) );
 			
-			return array_merge( $parent_siblings, $siblings );
+			return $parent_siblings + $siblings;
 		}
 		
 		$children = wp_filter_object_list( $items, array( 'menu_item_parent' => $current->ID ) );
 		
 		if( !empty( $children ) ) {
-	
-			return array_merge( $siblings, $children );
+			
+			if( ( $max_depth - 1) == $current_depth ) {
+				
+				return $siblings + $children;
+			}
+			
+			return $children;
 		}
 		
 		return $siblings;

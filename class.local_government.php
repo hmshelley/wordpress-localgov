@@ -15,7 +15,6 @@ class LocalGovernment {
 	
 	static $widgets = array(
 		'twitter',
-		'page_menu',
 		'submenu'
 	);
 
@@ -47,6 +46,8 @@ class LocalGovernment {
 		// Load modules to register the rewrite rules
 		self::load_modules();
 		
+		self::register_types();
+		
 		flush_rewrite_rules();
 	}
 
@@ -56,6 +57,24 @@ class LocalGovernment {
 	public static function plugin_deactivation() {
 		
 		flush_rewrite_rules();
+	}
+	
+	/**
+	 * Register custom post types in active modules
+	 */
+	public static function register_types() {
+		
+		$modules = self::get_active_modules();
+		
+		foreach( $modules as $module ) {
+		
+			$class = preg_replace('/(?:^|_)(.?)/e',"strtoupper('$1')", $module); 
+			$class = "localgovernment\\" . $class . '_Module';
+			
+			if( method_exists ( $class, 'register_types' ) ) {
+				$class::register_types();
+			}
+		}
 	}
 
 	/**
@@ -70,7 +89,6 @@ class LocalGovernment {
 			$path = self::get_module_path( $module );
 			
 			if ( !file_exists( $path ) ) {
-				die($path);
 				throw new \LG_Class_Not_Found_Exception( $path );
 			}
 		

@@ -24,8 +24,7 @@ class Submenus_Module {
 	public function setup() {
 		add_filter( 'wp_nav_menu_objects', array( $this, 'filter_nav_menu_objects' ), 10, 2 );
 	}
-		
-	// TODO: Add support for start depth
+	
 	public function filter_nav_menu_objects( $items, $args ) {
 	
 		if ( empty( $args->lg_submenu ) ) {
@@ -55,7 +54,7 @@ class Submenus_Module {
 		}
 	
 		if( $current_depth < $start_depth ) {
-			return;
+			return array();
 		}
 
 		$siblings = wp_filter_object_list( $items, array( 

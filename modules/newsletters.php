@@ -25,28 +25,41 @@ class Newsletters_Module {
 	
 		add_action( 'init', array( $this, 'init' ) );
 		add_action( 'wp', array( $this, 'wp' ) );
-		add_action( 'pre_get_posts', array( $this, 'pre_get_posts' ) );
+		
+		add_filter( 'lgarchives_default_args', array( $this, 'filter_lgarchives_default_args' ), 10, 2 );
+		add_filter( 'lgarchives_args', array( $this, 'filter_lgarchives_args' ) );
+	}
+	
+	public static function filter_lgarchives_default_args( $defaults, $args ) {
+		
+		if(	
+			!isset( $args['post_type'] )
+			|| ( $args['post_type'] != 'newsletter' && $args['post_type'] != 'lg_newsletter' )
+		) {
+			return $defaults;
+		}
+		
+		$defaults['order_by'] = 'date_col DESC, post_title DESC';
+		$defaults['date_key'] = 'lg_newsletter_date';
+		$defaults['date_value'] = 'meta_value';
+		
+		return $defaults;
+	}
+	
+	public static function filter_lgarchives_args( $args ) {
+		
+		if(	
+			!isset( $args['post_type'] )
+			|| ( $args['post_type'] != 'newsletter' && $args['post_type'] != 'lg_newsletter' )
+		) {
+			return $args;
+		}
+		
+		$args['post_type'] = 'lg_newsletter';
+		return $args;
 	}
 
 	public function register_types() {
-		
-		add_rewrite_tag( '%' . LG_PREFIX . 'newsletter_year%', '([0-9]{4})' );
-	
-		// Set up URL rewrites -- needs to happen before post type is registered
-		/*$year_regex = '([0-9]{4})';
-		add_rewrite_tag( '%' . LG_PREFIX . 'newsletter_year%', $year_regex );
-		add_rewrite_rule( 'newsletters/' . $year_regex . '/?$', 'index.php?post_type=' . LG_PREFIX . 'newsletter&' . LG_PREFIX . 'newsletter_year=$matches[1]', 'top' );*/
-		
-		// Change page title
-		add_filter( 'post_type_archive_title', function( $title ) {
-			
-			if( get_query_var( LG_PREFIX . 'newsletter_year' ) ) {
-				$title = $title . ' - ' . get_query_var( LG_PREFIX . 'newsletter_year' );
-			}
-			
-			return $title;
-			
-		} );
 	
 		register_post_type(LG_PREFIX . 'newsletter', array(
 			'labels' => array(
@@ -65,38 +78,24 @@ class Newsletters_Module {
 	function init() {
 	
 		self::register_types();
-	
-		$months = array(
-			'1' => 'January',
-			'2' => 'February',
-			'3' => 'March',
-			'4' => 'April',
-			'5' => 'May',
-			'6' => 'June',
-			'7' => 'July',
-			'8' => 'August',
-			'9' => 'September',
-			'10' => 'October',
-			'11' => 'November',
-			'12' => 'December'
-		);
 		
-		$years = range(date('Y', strtotime('+1 year')), date('Y', strtotime('-50 years')));
-		
-		$fm = new \Fieldmanager_Group(array(
+		$fm = new \Fieldmanager_Group( array(
 			'name' => LG_PREFIX . 'newsletter',
 			'children' => array(
-				'month' => new \Fieldmanager_Select('Month', array(
-					'options' => $months, 
-					'default_value' => date('n'),
-					'index' => LG_PREFIX . 'newsletter_month'
+				'date' => new MonthYear('Newsletter Date', array(
+					'index' => LG_PREFIX . 'newsletter_date'
 				)),
-				'year' => new \Fieldmanager_Select('Year', array(
-					'options' => $years, 
-					'default_value' => date('Y'),
-					'index' => LG_PREFIX . 'newsletter_year'
-				)),
-				'newsletter_file' => new \Fieldmanager_Media('Newsletter File')
+				'newsletter_file' => new \Fieldmanager_Media('Newsletter File'),
+				'files' => new \Fieldmanager_Group( array(
+					'limit' => 0,
+					'label' => 'Related File',
+					'label_macro' => array( 'File: %s', 'title' ),
+					'add_more_label' => 'Add Another File',
+					'children' => array(
+						'title' => new \Fieldmanager_Textfield( 'Title' ),
+						'file' => new \Fieldmanager_Media( 'File' )
+					)
+				) )
 			)
 		));
 		
@@ -125,64 +124,94 @@ class Newsletters_Module {
 		header( "Location: $url" );
 		exit;
 	}	
-	
-	function pre_get_posts( $query ) {
-		
-		if( 
-			is_admin()
-			|| !$query->is_main_query()
-			|| !$query->is_post_type_archive( LG_PREFIX . 'newsletter' )
-		) {
-			return;
-		}
-		
-		// Get custom fields for sorting
-		add_filter( 'posts_join', function( $join ) {
-		
-			global $wpdb;
-			
-			$join = "INNER JOIN $wpdb->postmeta ON ($wpdb->posts.ID = $wpdb->postmeta.post_id AND $wpdb->postmeta.meta_key = '" . LG_PREFIX . "newsletter_year') INNER JOIN $wpdb->postmeta AS mt1 ON ($wpdb->posts.ID = mt1.post_id AND mt1.meta_key = '" . LG_PREFIX . "newsletter_month')";
-			
-			return $join;
-		} );
-	
-		// Sort by custom fields
-		add_filter( 'posts_orderby', function( $orderby ) {
-		
-			global $wpdb;
-		
-			$orderby = "$wpdb->postmeta.meta_value+0 DESC, mt1.meta_value+0 DESC";
-			
-			return $orderby;
-		} );
-		
-		// Remove limit
-		$query->set( 'posts_per_page', '-1' );
-		
-		// Filter by year if provided
-		$newsletter_year = get_query_var( LG_PREFIX . 'newsletter_year' );
-		
-		if( !empty( $newsletter_year )) {
-			
-			$meta_query = array(
-				array(
-					'value' => $newsletter_year,
-					'compare' => '='
-				)
-			);
-			$query->set( 'meta_query', $meta_query );
-		}
-		// Listing by year
-		else {
-
-			add_filter( 'posts_groupby', function( $groupby ) {
-				global $wpdb;
-			
-				$groupby = "$wpdb->postmeta.meta_value";
-				return $groupby;
-			} );
-		}
-	}
 }
 
 Newsletters_Module::instance();
+
+
+class MonthYear extends \Fieldmanager_Select {
+	
+	public function __construct( $label, $options = array() ) {
+		
+		parent::__construct( $label, $options );
+	}
+	
+	public function form_element( $value ) {
+	
+		$months = array(
+			'01' => 'January',
+			'02' => 'February',
+			'03' => 'March',
+			'04' => 'April',
+			'05' => 'May',
+			'06' => 'June',
+			'07' => 'July',
+			'08' => 'August',
+			'09' => 'September',
+			'10' => 'October',
+			'11' => 'November',
+			'12' => 'December'
+		);
+		
+		$years = range(date('Y', strtotime('+1 year')), date('Y', strtotime('-50 years')));
+	
+		$output = '';
+		
+		if( empty( $value ) ) {
+			$value = date('Y-m-d H:i:s');
+		}
+		
+		$month_opts = '';
+		foreach( $months as $month_value => $month_name ) {
+			
+			$data = array(
+				'name' => $month_name,
+				'value' => $month_value
+			);
+			
+			$month_opts .= $this->form_data_element( $data, array( date('m', strtotime( $value ) ) ) );
+		}
+	
+		$year_opts = '';
+		foreach( $years as $year ) {
+		
+			$data = array(
+				'name' => $year,
+				'value' => $year
+			);
+		
+			$year_opts .= $this->form_data_element( $data, array( date('Y', strtotime($value) ) ) );
+		}
+	
+		$output .= sprintf(
+			'<select name="%s">%s</select>',
+			$this->get_form_name( '[month]' ),
+			$month_opts
+		);
+	
+		$output .= sprintf(
+			'<select name="%s">%s</select>',
+			$this->get_form_name( '[year]' ),
+			$year_opts
+		);
+		
+		return $output;
+	}
+
+	/**
+	 * Convert date to timestamp
+	 * @param $value
+	 * @param $current_value
+	 * @return int unix timestamp
+	 */
+	public function presave( $value, $current_value = array() ) {
+		
+		if( empty( $value['year'] ) || empty( $value['month'] ) )  {
+			return 0;
+		}
+		
+		$date = $value['year'] . '-' . $value['month'] . '-01';
+		
+		return $date . ' 00:00:00';
+	}
+}

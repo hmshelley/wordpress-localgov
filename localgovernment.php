@@ -54,6 +54,8 @@ add_action( 'widgets_init', array( 'localgovernment\LocalGovernment', 'load_widg
 lg_load_class( 'localgovernment\ThemeOptions' );
 add_action( 'after_setup_theme', array( 'localgovernment\ThemeOptions', 'setup_page' ) );
 
+require 'template_tags.php';
+
 /**
  * Exception Class for classes that could not be loaded
  */

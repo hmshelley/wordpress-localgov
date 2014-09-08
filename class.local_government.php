@@ -10,7 +10,8 @@ class LocalGovernment {
 		'meetings',
 		'newsletters',
 		'featured_content',
-		'submenus'
+		'submenus',
+		'shortcodes'
 	);
 	
 	static $widgets = array(

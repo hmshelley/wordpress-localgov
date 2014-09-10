@@ -35,31 +35,39 @@ class ThemeOptions {
 	}
 	
 	public function setup_page() {
-	
-		// http://www.paulund.co.uk/theme-options-page
-		// General
+		
+		// Branding
 		//	- Logo image
-		//	- Logo text
 		//	- Favicon
-		// 	- Google Analytics?
-		//	- Custom CSS
+		//	- Copyright text 
+		//
+		// Theme
+		//  - Colors
+		//  - Header images
+		//  - Fonts
 		// 
 		// Social
 		// 	- Social links
-		//  - 
 		//
-		// Branding/Styling/Skin/Design:
-		// 	- primary color/secondary color
-		//	- custom header image
-		//	- custom font?
+		// Contact
+		//  - Phone
+		//  - Fax
+		//  - Address
 		// 
-		// Homepage
-		// - Jumbotron/slideshow type
+		// Advanced/Tracking
+		// 	- Google Analytics
 		// 
-		// Layout?
+		// Menu
+		//  - Primary menu depth
+		//
+		// Featured Content
+		//  - Layout: image, slider
+		// 
+		// Layout
+		//  - Sidebar position: left, right
 		
-		$general_fields = new \Fieldmanager_Group( array(
-			'label' => 'General',
+		$branding_fields = new \Fieldmanager_Group( array(
+			'label' => 'Branding',
 			'children' => array(
 				'logo' => new \Fieldmanager_Media('Logo'),
 				'copyright_text' => new \Fieldmanager_Textarea( 'Copyright Text', array(
@@ -114,13 +122,24 @@ class ThemeOptions {
 			)
 		) );
 		
+		$menus_fields = new \Fieldmanager_Group( array(
+			'label' => 'Menus',
+			'children' => array(
+				'primary_menu_depth' => new \Fieldmanager_Select( 'Primary Menu Depth', array(
+					'options' => range(1, 3),
+					'default_value' => 2
+				) )
+			)
+		) );
+		
 		$fm = new \Fieldmanager_Group( array(
 			'name' => LG_PREFIX . 'theme_options',
 			'tabbed' => true,
 			'children' => array(
-				'general' => $general_fields,
+				'branding' => $branding_fields,
 				'social' => $social_fields,
-				'contact_info' => $contact_fields
+				'contact_info' => $contact_fields,
+				'menus' => $menus_fields
 			)
 		) );
 		$fm->add_submenu_page( 'themes.php', 'Local Government Options', 'Local Government', 'manage_options', 'localgovernment' );

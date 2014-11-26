@@ -1,6 +1,6 @@
 <?php
 
-namespace localgovernment;
+namespace localgov;
 
 class Shortcodes_Module {
 	
@@ -70,10 +70,10 @@ class Shortcodes_Module {
 			'posttype' => 'post_type',
 			'limit' => 'limit',
 			'orderby' => 'order_by',
-			'datekey' => 'date_key',
-			'datevalue' => 'date_value',
 			'groupposts' => 'group_posts',
 			'grouporder' => 'group_order',
+			'postmetakeys' => 'postmeta_keys',
+			'datekey' => 'date_key',
 			'template' => 'template'
 		);
 		

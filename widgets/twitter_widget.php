@@ -1,6 +1,6 @@
 <?php
 
-namespace localgovernment;
+namespace localgov;
 
 // TODO: Move to settings page
 defined( 'LG_TWITTER_CONSUMER_KEY' )   or define( 'LG_TWITTER_CONSUMER_KEY', '' );
@@ -20,9 +20,9 @@ class Twitter_Widget extends \WP_Widget {
 	function __construct() {
 		parent::__construct(
 			'TwitterWidget',
-			__('LG: Recent Tweets', 'localgovernment'),
+			__('LG: Recent Tweets', 'localgov'),
 			array( 
-				'description' => __( 'Displays recent tweets.', 'localgovernment')
+				'description' => __( 'Displays recent tweets.', 'localgov')
 			)
 		);
 	}
@@ -65,11 +65,11 @@ class Twitter_Widget extends \WP_Widget {
 	<li>
 		<div class="text"><?php echo $tweet->text; ?></div>
 		<?php $time_diff = human_time_diff( strtotime($tweet->created_at), current_time('timestamp') ); ?>
-		<div class="time-diff"><?php printf( __('%s ago', 'localgovernment'), $time_diff); ?></div>
+		<div class="time-diff"><?php printf( __('%s ago', 'localgov'), $time_diff); ?></div>
 	</li>
 <?php endforeach; ?>
 </ol>
-<p><a href="http://twitter.com/<?php echo $instance['twitter_username'] ?>"><?php printf( __('Follow @%s', 'localgovernment' ),  $instance['twitter_username'] ); ?></a></p>
+<p><a href="http://twitter.com/<?php echo $instance['twitter_username'] ?>"><?php printf( __('Follow @%s', 'localgov' ),  $instance['twitter_username'] ); ?></a></p>
 <?php echo $args['after_widget']; ?>
 <?php	
 	}
@@ -84,7 +84,7 @@ class Twitter_Widget extends \WP_Widget {
 	 */
 	public function form( $instance ) {
 		
-		$title = __( 'Tweets', 'localgovernment' );
+		$title = __( 'Tweets', 'localgov' );
 		
 		if ( isset( $instance[ 'title' ] )) {
 			$title = $instance[ 'title' ];
@@ -132,4 +132,4 @@ class Twitter_Widget extends \WP_Widget {
 	}
 }
 
-register_widget( 'localgovernment\Twitter_Widget' );
+register_widget( 'localgov\Twitter_Widget' );

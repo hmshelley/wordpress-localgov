@@ -1,6 +1,6 @@
 <?php
 
-namespace localgovernment;
+namespace localgov;
 
 class Meetings_Module {
 	

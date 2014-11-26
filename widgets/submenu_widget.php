@@ -1,6 +1,6 @@
 <?php
 
-namespace localgovernment;
+namespace localgov;
 
 class Submenu_Widget extends \WP_Widget {
 
@@ -14,9 +14,9 @@ class Submenu_Widget extends \WP_Widget {
 	function __construct() {
 		parent::__construct(
 			'SubmenuWidget',
-			__('LG: Submenu', 'localgovernment'),
+			__('LG: Submenu', 'localgov'),
 			array( 
-				'description' => __( 'Displays a submenu according to current post/page.', 'localgovernment')
+				'description' => __( 'Displays a submenu according to current post/page.', 'localgov')
 			)
 		);
 	}
@@ -132,4 +132,4 @@ class Submenu_Widget extends \WP_Widget {
 	}
 }
 
-register_widget( 'localgovernment\Submenu_Widget' );
+register_widget( 'localgov\Submenu_Widget' );

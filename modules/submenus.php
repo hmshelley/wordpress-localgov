@@ -1,6 +1,6 @@
 <?php
 
-namespace localgovernment;
+namespace localgov;
 
 class Submenus_Module {
 	

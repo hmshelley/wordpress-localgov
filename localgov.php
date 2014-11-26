@@ -1,6 +1,6 @@
 <?php
 /*
-Plugin Name: Local Government
+Plugin Name: LocalGov
 Plugin URI: 
 Description: Wordpress plugin designed for local government including towns, cities, and school districts, as well as small groups and organizations. Features include meeting agendas and minutes, newsletters, featured content for homepage, and other functionality commonly used in local government websites. Dependent on Fieldmanager plugin.
 Version: 1.0-alpha
@@ -11,7 +11,7 @@ License:
 
 define( 'LG_VERSION', '1.0-alpha' );
 define( 'LG_BASE_DIR', dirname( __FILE__ ) );
-define( 'LG_CUSTOM_DIR', WP_CONTENT_DIR . '/localgovernment' );
+define( 'LG_CUSTOM_DIR', WP_CONTENT_DIR . '/localgov' );
 
 if( file_exists( LG_CUSTOM_DIR . '/config.php' ) ) {
 	require LG_CUSTOM_DIR . '/config.php';
@@ -24,12 +24,14 @@ defined( 'LG_PREFIX' )   or define( 'LG_PREFIX', 'lg_' );
  */
 function lg_load_class( $class ) {
 
-	if ( class_exists( $class ) || strpos( $class, 'localgovernment' ) !== 0 ) {
+	if ( class_exists( $class ) ) { //|| strpos( $class, 'localgov' ) !== 0 ) {
 		return;
 	}
 	
-	$filename = str_replace( 'localgovernment\\' , '', $class );
-	$filename = strtolower(preg_replace('/([a-z])([A-Z])/', '$1_$2', $filename));
+	$filename = str_replace( 'localgov\\' , '', $class );
+	$filename = str_replace( 'FM_' , 'fm-', $filename );
+	$filename = str_replace( '_' , '-', $filename );
+	$filename = strtolower(preg_replace('/([a-z])([A-Z])/', '$1-$2', $filename));
 		
 	$file = LG_BASE_DIR . '/class.' . $filename . '.php';
 		
@@ -44,15 +46,18 @@ function lg_load_class( $class ) {
 //	spl_autoload_register( 'lg_load_class' );
 //}
 
-lg_load_class( 'localgovernment\LocalGovernment' );
-register_activation_hook( __FILE__, array( 'localgovernment\LocalGovernment', 'plugin_activation' ) );
-register_deactivation_hook( __FILE__, array( 'localgovernment\LocalGovernment', 'plugin_deactivation' ) );
+lg_load_class( 'localgov\Localgov' );
 
-add_action( 'plugins_loaded', array( 'localgovernment\LocalGovernment', 'load_modules' ) );
-add_action( 'widgets_init', array( 'localgovernment\LocalGovernment', 'load_widgets' ) );
+register_activation_hook( __FILE__, array( 'localgov\Localgov', 'plugin_activation' ) );
+register_deactivation_hook( __FILE__, array( 'localgov\Localgov', 'plugin_deactivation' ) );
 
-lg_load_class( 'localgovernment\ThemeOptions' );
-add_action( 'after_setup_theme', array( 'localgovernment\ThemeOptions', 'setup_page' ) );
+add_action( 'plugins_loaded', array( 'localgov\Localgov', 'load_modules' ) );		
+add_action( 'widgets_init', array( 'localgov\Localgov', 'load_widgets' ) );
+
+if ( is_admin() ) {
+	lg_load_class( 'localgov\Admin' );
+}
+
 
 require 'template_tags.php';
 

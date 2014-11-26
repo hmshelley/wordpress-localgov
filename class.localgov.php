@@ -1,8 +1,8 @@
 <?php
 
-namespace localgovernment;
+namespace localgov;
 
-class LocalGovernment {
+class Localgov {
 	
 	private static $instance;
 
@@ -11,7 +11,8 @@ class LocalGovernment {
 		'newsletters',
 		'featured_content',
 		'submenus',
-		'shortcodes'
+		'shortcodes',
+		'directory'
 	);
 	
 	static $widgets = array(
@@ -25,19 +26,12 @@ class LocalGovernment {
 	
 	public static function instance() {
 		if ( ! isset( self::$instance ) ) {
-			self::$instance = new LocalGovernment;
-			self::$instance->setup();
+			
+			self::$instance = new Localgov;
 		}
 		return self::$instance;
 	}
-
-	public function setup() {
 	
-	}
-	
-	function init() {
-		
-	}
 	
 	/**
 	 * Hook for plugin activation
@@ -70,7 +64,7 @@ class LocalGovernment {
 		foreach( $modules as $module ) {
 		
 			$class = preg_replace('/(?:^|_)(.?)/e',"strtoupper('$1')", $module); 
-			$class = "localgovernment\\" . $class . '_Module';
+			$class = "localgov\\" . $class . '_Module';
 			
 			if( method_exists ( $class, 'register_types' ) ) {
 				$class::register_types();
@@ -162,4 +156,4 @@ class LocalGovernment {
 
 }
 
-LocalGovernment::instance();
+Localgov::instance();

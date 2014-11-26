@@ -1,12 +1,14 @@
 <?php
 
-namespace localgovernment;
+namespace localgov;
 
-class ThemeOptions {
+class ThemeSettings {
 	
 	private static $instance;
 	
-	public static $social_types = array(
+	public $parent_slug;
+	
+	public $social_types = array(
 		'email' => 'Email',
 		'facebook' => 'Facebook',
 		'flickr' => 'Flickr',
@@ -25,26 +27,17 @@ class ThemeOptions {
 	
 	public static function instance() {
 		if ( ! isset( self::$instance ) ) {
-			self::$instance = new ThemeOptions;
-			self::$instance->setup();
+			self::$instance = new ThemeSettings;
 		}
 		return self::$instance;
 	}
-
-	public function setup() {
-	}
 	
-	public function setup_page() {
+	public function add_admin_page() {
 		
 		// Branding
 		//	- Logo image
 		//	- Favicon
-		//	- Copyright text 
-		//
-		// Theme
-		//  - Colors
-		//  - Header images
-		//  - Fonts
+		//	- Copyright text?
 		// 
 		// Social
 		// 	- Social links
@@ -54,7 +47,9 @@ class ThemeOptions {
 		//  - Fax
 		//  - Address
 		// 
-		// Advanced/Tracking
+		// Archive
+		//
+		//  Header/Footer Scripts
 		// 	- Google Analytics
 		// 
 		// Menu
@@ -69,7 +64,7 @@ class ThemeOptions {
 		$branding_fields = new \Fieldmanager_Group( array(
 			'label' => 'Branding',
 			'children' => array(
-				'logo' => new \Fieldmanager_Media('Logo'),
+				'logo' => new \Fieldmanager_Media('Logo Image'),
 				'copyright_text' => new \Fieldmanager_Textarea( 'Copyright Text', array(
 					'attributes' => array(
 						'rows' => '5',
@@ -93,7 +88,7 @@ class ThemeOptions {
 					'children' => array(
 						'type' => new \Fieldmanager_Select( 'Type', array(
 							'first_empty' => true,
-							'options' => self::$social_types
+							'options' => $this->social_types
 						) ),
 						'url' => new \Fieldmanager_Textfield( 'URL' )
 					)
@@ -142,8 +137,9 @@ class ThemeOptions {
 				'menus' => $menus_fields
 			)
 		) );
-		$fm->add_submenu_page( 'themes.php', 'Local Government Options', 'Local Government', 'manage_options', 'localgovernment' );
+		
+		$fm->add_submenu_page( $this->parent_slug, 'Theme Settings', 'Theme Settings', 'manage_options', 'localgov-theme' );
 	}
 }
 
-ThemeOptions::instance();
+ThemeSettings::instance();

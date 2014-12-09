@@ -13,7 +13,8 @@ function lg_get_archives( $args ) {
 		'group_posts' => '',
 		'group_order' => '',
 		'postmeta_keys' => array(),
-		'template' => LG_BASE_DIR . '/templates/archive.php'
+		'template' => LG_BASE_DIR . '/templates/archive.php',
+		'template_options' => array()
 	);
 	
 	/**

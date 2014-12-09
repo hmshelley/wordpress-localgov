@@ -92,14 +92,9 @@ class Directory_Module {
 	
 	public static function shortcode_lgdirectory( $atts ) {
 		
-		if( !empty($atts['fields']) ) {
-			$atts['fields'] = preg_split("/[\s,]+/", $atts['fields'] );
-		}
-		
 		$defaults = array(
-			'fields' => array('name', 'phone', 'email')
+			'fields' => 'name, phone, email'
 		);
-		
 		$atts = shortcode_atts( $defaults, $atts, 'lgdirectory' );
 				
 		$args = array(
@@ -112,7 +107,11 @@ class Directory_Module {
 			'template' => LG_BASE_DIR . '/templates/directory.php'
 		);
 		
-		$args += $atts;
+		if( !empty( $atts['fields'] ) ) {
+			$args['template_options']['fields'] = preg_split("/[\s,]+/", $atts['fields'] );
+		}
+		
+		$args = apply_filters( 'lgdirectory_args', $args );
 		
 		return lg_get_archives( $args );
 	}

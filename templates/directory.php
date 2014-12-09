@@ -32,14 +32,27 @@
 		?>
 	
 		<tr>
-			<?php foreach($args['fields'] as $field): ?>
+			<?php foreach($args['template_options']['fields'] as $field): ?>
 			
 				<td>
 					<span class="<?php echo $field; ?>">
 					<?php 
 						switch($field) {
-							case 'name': 
-								echo $name;
+							case 'name':
+								if( !empty( $member[0]['bio'] ) ) {
+									echo '<a href="' . get_permalink() . '"';
+									
+									if( !empty( $args['template_options']['member_link_attributes'] ) ) {
+										foreach( $args['template_options']['member_link_attributes'] as $key => $value ) {
+											echo ' ' . $key . '="' . $value . '"';
+										}
+									}
+									
+									echo '>' . $name . '</a>'; 
+								}
+								else {
+									echo $name;
+								}
 								echo $title;
 								break;
 							case 'address':

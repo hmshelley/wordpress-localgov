@@ -2,7 +2,7 @@
 /*
 Plugin Name: LocalGov
 Plugin URI: 
-Description: Wordpress plugin designed for local government including towns, cities, and school districts, as well as small groups and organizations. Features include meeting agendas and minutes, newsletters, featured content for homepage, and other functionality commonly used in local government websites. Dependent on Fieldmanager plugin.
+Description: Wordpress plugin designed for local government including towns, cities, and school districts, as well as small groups and organizations. Features include meeting agendas and minutes, newsletters, featured content for homepage, and other functionality commonly used in local government websites.
 Version: 1.0-alpha
 Author: Heather Shelley
 Author URI: 
@@ -20,11 +20,11 @@ if( file_exists( LG_CUSTOM_DIR . '/config.php' ) ) {
 defined( 'LG_PREFIX' )   or define( 'LG_PREFIX', 'lg_' );
 
 /** 
- * Autoload classes
+ * Load classes
  */
-function lg_load_class( $class ) {
+function localgov_load_class( $class ) {
 
-	if ( class_exists( $class ) ) { //|| strpos( $class, 'localgov' ) !== 0 ) {
+	if ( class_exists( $class ) ) {
 		return;
 	}
 	
@@ -42,24 +42,25 @@ function lg_load_class( $class ) {
 	require_once( $file );
 }
 
-//if ( function_exists( 'spl_autoload_register' ) ) {
-//	spl_autoload_register( 'lg_load_class' );
-//}
+localgov_load_class( 'localgov\Localgov' );
 
-lg_load_class( 'localgov\Localgov' );
+function localgov_init() {
+	
+	require 'template_tags.php';
+	
+	if ( is_admin() ) {
+		localgov_load_class( 'localgov\Admin' );
+	}
+	
+	localgov\Localgov::load_modules();
+}
+add_action('plugins_loaded', 'localgov_init');
+
+add_action( 'widgets_init', array( 'localgov\Localgov', 'load_widgets' ) );
 
 register_activation_hook( __FILE__, array( 'localgov\Localgov', 'plugin_activation' ) );
 register_deactivation_hook( __FILE__, array( 'localgov\Localgov', 'plugin_deactivation' ) );
 
-add_action( 'plugins_loaded', array( 'localgov\Localgov', 'load_modules' ) );		
-add_action( 'widgets_init', array( 'localgov\Localgov', 'load_widgets' ) );
-
-if ( is_admin() ) {
-	lg_load_class( 'localgov\Admin' );
-}
-
-
-require 'template_tags.php';
 
 /**
  * Exception Class for classes that could not be loaded

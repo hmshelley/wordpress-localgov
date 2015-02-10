@@ -36,7 +36,7 @@ class NetworkSettings {
 			)
 		) );
 		
-		lg_load_class( 'FM_Context_Submenu_Network' );
+		localgov_load_class( 'FM_Context_Submenu_Network' );
 		
 		$submenu = new \FM_Context_Submenu_Network('settings.php', 'LocalGov Settings', 'LocalGov Settings', 'manage_options', 'localgov-network', $fm, true );
 		add_action( 'network_admin_menu', array( $submenu, 'register_submenu_page' ) );

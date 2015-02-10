@@ -33,10 +33,35 @@ class Localgov {
 	}
 	
 	
+	public static function check_dependencies() {
+		
+		// Check plugin dependencies
+		localgov_load_class( 'PluginDependency' );
+		
+		$fieldmanager_dependency = new \PluginDependency( 
+			'LocalGov',
+			'Fieldmanager', 'https://github.com/netaustin/wordpress-fieldmanager' 
+		);
+		if( !$fieldmanager_dependency->verify() ) {
+			return $fieldmanager_dependency->message();
+		}
+		
+		return true;
+	}
+	
+	
 	/**
 	 * Hook for plugin activation
 	 */
 	public static function plugin_activation() {
+		
+		// Check plugin dependencies
+		$has_dependencies = self::check_dependencies();
+		
+		if( $has_dependencies !== true ) {
+			deactivate_plugins( plugin_basename( __FILE__) );
+			die( $has_dependencies );
+		}
 		
 		// Load modules to register the rewrite rules
 		self::load_modules();

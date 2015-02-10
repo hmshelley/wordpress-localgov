@@ -78,7 +78,7 @@ class Newsletters_Module {
 	
 		self::register_types();
 		
-		lg_load_class( 'FM_Month_Year' );
+		localgov_load_class( 'FM_Month_Year' );
 		
 		$fm = new \Fieldmanager_Group( array(
 			'name' => LG_PREFIX . 'newsletter',

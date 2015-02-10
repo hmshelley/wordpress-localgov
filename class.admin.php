@@ -23,9 +23,9 @@ class Admin {
 
 	public function setup() {
 		
-		lg_load_class( 'localgov\LandingPage' );
-		lg_load_class( 'localgov\ThemeSettings' );
-		lg_load_class( 'localgov\NetworkSettings' );
+		localgov_load_class( 'localgov\LandingPage' );
+		localgov_load_class( 'localgov\ThemeSettings' );
+		localgov_load_class( 'localgov\NetworkSettings' );
 		
 		$this->landing_page = LandingPage::instance();
 		$this->theme_settings = ThemeSettings::instance();

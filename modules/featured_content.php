@@ -73,8 +73,6 @@ class FeaturedContent_Module {
 	}
 
 	public static function get_featured_posts( $options = array() ) {
-		
-		$sticky_post_ids = get_option('sticky_posts');
 			
 		$args = array(
 			'numberposts' => self::$max_posts,
@@ -88,19 +86,25 @@ class FeaturedContent_Module {
 			$args['meta_key'] = LG_PREFIX . 'featured_categories';
 		}
 		
-		$sticky = get_posts( array_merge( $args, array(
-			'post__in' => $sticky_post_ids
-		) ) );
+		$sticky_post_ids = get_option('sticky_posts');
+		$sticky_posts = array();
 		
-		// Query for featured posts.
-		$featured = get_posts( array_merge( $args, array(
-			'post__not_in' => $sticky_post_ids,
-			'numberposts' => self::$max_posts - count($sticky)
-		) ) );
+		if( !empty( $sticky_post_ids ) ) {
+		
+			$sticky_posts = get_posts( array_merge( $args, array(
+				'post__in' => $sticky_post_ids
+			) ) );
+			
+			$args['post__not_in'] = $sticky_post_ids;
+			$args['numberposts'] = self::$max_posts - count($sticky_posts);
+		}
+		
+		// Query for featured posts
+		$featured_posts = get_posts( $args );
 
-		$featured = array_merge( $sticky, $featured );
+		$featured_posts = array_merge( $sticky_posts, $featured_posts );
 
-		return apply_filters( 'lg_featured_posts', $featured );
+		return apply_filters( 'lg_featured_posts', $featured_posts );
 		
 	}
 

@@ -45,14 +45,17 @@ function localgov_load_class( $class ) {
 localgov_load_class( 'localgov\Localgov' );
 
 function localgov_init() {
-	
-	require 'template_tags.php';
-	
+		
 	if ( is_admin() ) {
 		localgov_load_class( 'localgov\Admin' );
 	}
 	
 	localgov\Localgov::load_modules();
+	
+	require 'template_tags.php';
+	
+	localgov_load_class( 'localgov\Shortcodes' );
+	
 }
 add_action('plugins_loaded', 'localgov_init');
 

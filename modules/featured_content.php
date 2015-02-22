@@ -11,7 +11,7 @@ class FeaturedContent_Module {
 	
 	public static $max_posts = 15;
 	
-	public static $post_types = array( 'post', 'page' );	
+	public static $post_types = array( 'post', 'page', 'lg_directory_member' );	
 
 	private function __construct() {
 		/* Don't do anything, needs to be initialized via instance() method */
@@ -39,47 +39,61 @@ class FeaturedContent_Module {
 	
 	public static function init() {	
 		
-		add_filter( 'lg_get_featured_posts', array( __CLASS__, 'get_featured_posts' ) );
+		add_filter( 'lg_get_featured_posts', array( __CLASS__, 'get_featured_posts' ), 10, 1 );
 
 		add_action( 'pre_get_posts', array( __CLASS__, 'pre_get_posts' ) );
 		
 		add_post_type_support( 'page', 'excerpt' );
 		
+		register_taxonomy_for_object_type( 'category', 'page' );
+		
 		// Add meta box with options to override title and excerpt
 		$featured_content_fields = new \Fieldmanager_Group( array(
 			'name' => LG_PREFIX . 'featured_content',
 			'children' => array(
-				'featured' => new \Fieldmanager_Checkbox( 'Featured in front page slideshow', array(
+				'featured' => new \Fieldmanager_Checkbox( __('Featured in content slider on front page'), array(
 					'index' => LG_PREFIX . 'featured'
 				) ),
-				'exclude' => new \Fieldmanager_Checkbox( 'Exclude from article list on front page', array(
-					'index' => LG_PREFIX . 'exclude_front_page'
+				'featured_categories' => new \Fieldmanager_Checkbox( __('Featured in content sliders for  categories'), array(
+					'index' => LG_PREFIX . 'featured_categories'
 				) ),
-				'title' => new \Fieldmanager_Textfield( 'Featured Title (to use instead of page/post title)' ),
-				
+				'exclude' => new \Fieldmanager_Checkbox( __('Exclude from front page and archives'), array(
+					'index' => LG_PREFIX . 'featured_exclude'
+				) ),
+				'title' => new \Fieldmanager_Textfield( __('Featured Title (Post/Page title is used if not specified)'), array(
+					'index' => LG_PREFIX . 'featured_title'
+				) ),
+				'show_more_link' => new \Fieldmanager_Checkbox( __('Show "Read More" link'), array(
+					'default_value' => true
+				) )
 			)
 		) );
 		
 		$featured_content_fields->add_meta_box( 'Featured Content', self::$post_types );
 	}
 
-	public static function get_featured_posts() {
-	
-		$sticky_post_ids = get_option('sticky_posts');
+	public static function get_featured_posts( $options = array() ) {
 		
-		$options = array(
+		$sticky_post_ids = get_option('sticky_posts');
+			
+		$args = array(
 			'numberposts' => self::$max_posts,
 			'post_type' => self::$post_types,
 			'meta_key' => LG_PREFIX . 'featured',
-			'meta_value' => true,
+			'meta_value' => true
 		);
 		
-		$sticky = get_posts( array_merge( $options, array(
+		if( !empty( $options['category_name'] ) ) {
+			$args['category_name'] = $options['category_name'];
+			$args['meta_key'] = LG_PREFIX . 'featured_categories';
+		}
+		
+		$sticky = get_posts( array_merge( $args, array(
 			'post__in' => $sticky_post_ids
 		) ) );
 		
 		// Query for featured posts.
-		$featured = get_posts( array_merge( $options, array(
+		$featured = get_posts( array_merge( $args, array(
 			'post__not_in' => $sticky_post_ids,
 			'numberposts' => self::$max_posts - count($sticky)
 		) ) );
@@ -96,15 +110,20 @@ class FeaturedContent_Module {
 	 */
 	public static function pre_get_posts( $query ) {
 
-		// Bail if not home or not main query.
-		if ( ! $query->is_home() || ! $query->is_main_query() ) {
+		// Bail if admin or not main query.
+		if ( 
+			is_admin()
+			|| ! $query->is_main_query()
+			|| is_page()
+		
+		) {
 			return;
 		}
 		
 		$excluded = get_posts( array(
 			'numberposts' => self::$max_posts,
 			'post_type' => self::$post_types,
-			'meta_key' => LG_PREFIX . 'exclude_front_page',
+			'meta_key' => LG_PREFIX . 'featured_exclude',
 			'meta_value' => true,
 		) );
 		

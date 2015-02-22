@@ -133,3 +133,45 @@ function lg_get_archives( $args ) {
 		return ob_get_clean();
 	}
 }
+
+
+function lg_get_featured_posts( $options ) {
+    return apply_filters( 'lg_get_featured_posts', $options );
+}
+
+
+function lg_get_featured( $args = array() ) {
+		
+	$defaults = array (
+		'template' => LG_BASE_DIR . '/templates/featured_content_slider.php',
+		'category_name' => ''
+	);
+	
+	
+	/**
+	 * Filter the default args
+	 * 
+	 * @param array  $defaults	An array of default args
+	 * @param array  $args	An array of user-provided args
+	 */
+	$defaults = apply_filters( 'lgfeatured_default_args', $defaults , $args );
+	
+	$args = wp_parse_args( $args, $defaults );
+	
+	/**
+	 * Filter the shortcode attributes
+	 * 
+	 * @param array  $args	An array of user-provided attributes
+	 */
+	$args = apply_filters( 'lgfeatured_args', $args );
+	
+	$options = array( 
+		'category_name' => $args['category_name']
+	);
+	
+	$featured_posts = lg_get_featured_posts( $options );
+	
+	ob_start();
+	include $args['template'];
+	return ob_get_clean();
+}

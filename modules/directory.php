@@ -47,7 +47,8 @@ class Directory_Module {
 			'rewrite' => array(
 				'slug' => 'directory'
 			),
-			'supports' => array( 'title', 'page-attributes' )
+			'supports' => array( 'title', 'page-attributes', 'excerpt' ),
+			'taxonomies' => array('category')
 		) );
 	}
 	
@@ -81,7 +82,9 @@ class Directory_Module {
 				'email' => new \Fieldmanager_Textfield( 'Email', array(
 					'index' => LG_PREFIX . 'directory_member_email'
 				) ),
-				'photo' => new \Fieldmanager_Media( 'Photo' ),
+				'photo' => new \Fieldmanager_Media( 'Photo', array(
+					'index' => '_thumbnail_id'
+				) ),
 				'bio' => new \Fieldmanager_TextArea( 'Bio' )
 			)
 		) );

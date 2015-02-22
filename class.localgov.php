@@ -11,7 +11,6 @@ class Localgov {
 		'newsletters',
 		'featured_content',
 		'submenus',
-		'shortcodes',
 		'directory'
 	);
 	

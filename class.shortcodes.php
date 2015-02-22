@@ -2,7 +2,7 @@
 
 namespace localgov;
 
-class Shortcodes_Module {
+class Shortcodes {
 	
 	/**
 	 * Class variables
@@ -15,7 +15,7 @@ class Shortcodes_Module {
 	
 	public static function instance() {
 		if ( ! isset( self::$instance ) ) {
-			self::$instance = new Shortcodes_Module;
+			self::$instance = new Shortcodes;
 			self::$instance->setup();
 		}
 		return self::$instance;
@@ -26,6 +26,7 @@ class Shortcodes_Module {
 		add_shortcode( 'currentdate', array( __CLASS__, 'current_date' ) );
 		add_shortcode( 'archives', array( __CLASS__, 'archives' ) );
 		add_shortcode( 'lgarchives', array( __CLASS__, 'lgarchives' ) );
+		add_shortcode( 'lgfeatured', array( __CLASS__, 'lgfeatured' ) );
 		
 	}
 	
@@ -35,7 +36,7 @@ class Shortcodes_Module {
 			'format' => get_option( 'date_format' )
 		);
 		
-		$atts = shortcode_atts( $defaults, $atts, 'lg' );
+		$atts = shortcode_atts( $defaults, $atts, 'localgov' );
 		
 		return date( $atts['format'] );
 	}
@@ -54,9 +55,11 @@ class Shortcodes_Module {
 		
 		$args = array();
 		
-		foreach($atts as $key => $att) {
-			if( isset( $args_key_map[$key] ) ) {
-				$args[$args_key_map[$key]] = $att;
+		if ( !empty( $atts) ) {
+			foreach($atts as $key => $att) {
+				if( isset( $args_key_map[$key] ) ) {
+					$args[$args_key_map[$key]] = $att;
+				}
 			}
 		}
 		
@@ -79,14 +82,36 @@ class Shortcodes_Module {
 		
 		$args = array();
 		
-		foreach($atts as $key => $att) {
-			if( isset( $args_key_map[$key] ) ) {
-				$args[$args_key_map[$key]] = $att;
+		if ( !empty( $atts) ) {
+			foreach( $atts as $key => $att ) {
+				if( isset( $args_key_map[$key] ) ) {
+					$args[$args_key_map[$key]] = $att;
+				}
 			}
 		}
 		
 		return lg_get_archives( $args );
 	}
+	
+	public static function lgfeatured ( $atts ) {
+		
+		$args_key_map = array(
+			'template' => 'template',
+			'category' => 'category_name'
+		);
+		
+		$args = array();
+		
+		if ( !empty( $atts) ) {
+			foreach( $atts as $key => $att ) {
+				if( isset( $args_key_map[$key] ) ) {
+					$args[$args_key_map[$key]] = $att;
+				}
+			}
+		}
+		
+		return lg_get_featured( $args );
+	}
 }
 
-Shortcodes_Module::instance();
+Shortcodes::instance();

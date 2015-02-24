@@ -78,7 +78,8 @@ class FeaturedContent_Module {
 			'numberposts' => self::$max_posts,
 			'post_type' => self::$post_types,
 			'meta_key' => LG_PREFIX . 'featured',
-			'meta_value' => true
+			'meta_value' => true,
+			'orderby' => array( 'menu_order' => 'ASC', 'date' => 'DESC' )
 		);
 		
 		if( !empty( $options['category_name'] ) ) {
@@ -108,17 +109,16 @@ class FeaturedContent_Module {
 		
 	}
 
-
 	/**
 	 * Exclude featured posts from the blog query when the blog is the front-page.
 	 */
 	public static function pre_get_posts( $query ) {
-
+		
 		// Bail if admin or not main query.
 		if ( 
 			is_admin()
 			|| ! $query->is_main_query()
-			|| is_page()
+			|| is_single()
 		
 		) {
 			return;
@@ -149,6 +149,7 @@ class FeaturedContent_Module {
 
 		$query->set( 'post__not_in', $exclude_ids );
 	}
+	
 }
 
 FeaturedContent_Module::instance();

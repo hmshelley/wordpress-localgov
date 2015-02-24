@@ -48,7 +48,8 @@ class Directory_Module {
 				'slug' => 'directory'
 			),
 			'supports' => array( 'title', 'page-attributes', 'excerpt' ),
-			'taxonomies' => array('category')
+			'taxonomies' => array('category'),
+			'hierarchical' => true
 		) );
 	}
 	

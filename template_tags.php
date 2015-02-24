@@ -140,8 +140,13 @@ function lg_get_featured_posts( $options ) {
 }
 
 
+$lg_featured_id = 0;
+
 function lg_get_featured( $args = array() ) {
 		
+	global $lg_featured_id;
+	$lg_featured_id++;
+	
 	$defaults = array (
 		'template' => LG_BASE_DIR . '/templates/featured_content_slider.php',
 		'category_name' => ''

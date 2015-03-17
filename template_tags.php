@@ -1,5 +1,149 @@
 <?php
 
+/**
+ * Display navigation to next/previous set of posts when applicable.
+ *
+ * @return void
+ */
+function lg_paging_nav() {
+	// Don't print empty markup if there's only one page.
+	if ( $GLOBALS['wp_query']->max_num_pages < 2 ) {
+		return;
+	}
+
+	$paged        = get_query_var( 'paged' ) ? intval( get_query_var( 'paged' ) ) : 1;
+	$pagenum_link = html_entity_decode( get_pagenum_link() );
+	$query_args   = array();
+	$url_parts    = explode( '?', $pagenum_link );
+
+	if ( isset( $url_parts[1] ) ) {
+		wp_parse_str( $url_parts[1], $query_args );
+	}
+
+	$pagenum_link = remove_query_arg( array_keys( $query_args ), $pagenum_link );
+	$pagenum_link = trailingslashit( $pagenum_link ) . '%_%';
+
+	$format  = $GLOBALS['wp_rewrite']->using_index_permalinks() && ! strpos( $pagenum_link, 'index.php' ) ? 'index.php/' : '';
+	$format .= $GLOBALS['wp_rewrite']->using_permalinks() ? user_trailingslashit( 'page/%#%', 'paged' ) : '?paged=%#%';
+
+	// Set up paginated links.
+	$links = paginate_links( array(
+		'type'     => 'list',
+		'base'     => $pagenum_link,
+		'format'   => $format,
+		'total'    => $GLOBALS['wp_query']->max_num_pages,
+		'current'  => $paged,
+		'mid_size' => 1,
+		'add_args' => array_map( 'urlencode', $query_args ),
+		'prev_text' => __( '&larr;', 'localgov' ),
+		'next_text' => __( '&rarr;', 'localgov' ),
+	) );
+
+	if ( $links ) :
+	?>
+	<nav class="paging-nav" role="navigation">
+		<h3 class="sr-only"><?php _e( 'Posts navigation', 'localgov' ); ?></h3>
+		<div class="pagination loop-pagination">
+			<?php echo $links; ?>
+		</div><!-- .pagination -->
+	</nav><!-- .paging-nav -->
+	<?php
+	endif;
+}
+
+function lg_get_breadcrumbs() {
+	
+	$html = '<ol class="breadcrumb">';
+	$html .= '<li><a href="' . get_home_url() . '"><span class="glyphicon-home"></span></a></li>';
+	
+	if( is_single() && get_post_type() == 'post' ) {
+		$html .= '<li>' . get_the_category_list( ', ' ) . '</li>';
+	}
+	elseif( is_page() ) {
+	
+		$post = get_post();
+		$ancestors = get_post_ancestors( $post );
+		
+		foreach( array_reverse( $ancestors ) as $ancestor ) {
+			$html .= '<li><a href="' . get_permalink( $ancestor ) . '" title="' . get_the_title( $ancestor ) . '">' . get_the_title( $ancestor ) . '</a></li>';
+		}
+	}
+	elseif( is_tag() ) {
+		$html .= '<li>' . get_single_tag_title() . '</li>';
+	}
+	elseif( is_day() ) {
+		$html .= '<li>Archive for ' . get_the_time( 'F jS, Y' ) . ' Archive</li>';
+	}
+	elseif( is_month() ) {
+		$html .= '<li>Archive for ' . get_the_time( 'F, Y' ) . ' Archive</li>';
+	}
+	elseif( is_year() ) {
+		$html .= '<li>' . get_the_time( 'Y' ) . ' Archive</li>';
+	}
+	elseif( is_author() ) {
+		$html .= '<li>Author Archive</li>';
+	}
+	elseif( is_search() ) {
+		$html .= '<li>Search Results</li>';
+	}
+	elseif( get_post_type() ) {
+		$post_type = get_post_type_object( get_post_type() );
+		$html .= '<li><a href="' . get_post_type_archive_link( get_post_type() ) . '">' . $post_type->label . '</a></li>';
+		
+		if( get_post_type() == LG_PREFIX . 'newsletter' ) {
+		
+			if( get_query_var( LG_PREFIX . 'newsletter_year' ) ) {
+				$newsletter_year = get_query_var( LG_PREFIX . 'newsletter_year' );
+				$url = get_post_type_archive_link( LG_PREFIX . 'newsletter' );
+				$url = add_query_arg( array( LG_PREFIX . 'newsletter_year' => $newsletter_year ), $url );
+				$html .= '<li><a href="' . $url . '">' . $newsletter_year . '</a></li>';
+			}
+		}
+		else if( get_post_type() == LG_PREFIX . 'meeting' ) {
+			
+			$type_term = '';
+			$meeting_year = '';
+			
+			if( is_single() ) {
+				$meeting = get_post_meta( LG_PREFIX . 'meeting' );
+				
+				if( !empty( $meeting[0]['type'] ) ) {
+					$type_term = get_term_by( 'id', $meeting[0]['type'] , LG_PREFIX . 'meeting_type' );
+				}
+				
+				if( !empty( $meeting[0]['date'] ) ) {
+					$meeting_year = date( 'Y', $meeting[0]['date'] );
+				}
+				
+			}
+			elseif( get_query_var( LG_PREFIX . 'meeting_type' ) ) {
+				$type_term = get_term_by( 'slug', get_query_var( LG_PREFIX . 'meeting_type' ), LG_PREFIX . 'meeting_type' );
+				
+				if( get_query_var( LG_PREFIX . 'meeting_year' ) ) {
+					$meeting_year = get_query_var( LG_PREFIX . 'meeting_year' );
+				}
+			}
+			
+			if( !empty($type_term) ) {
+				$url = get_term_link( $type_term->slug, LG_PREFIX . 'meeting_type' );
+				$html .= '<li><a href="' . $url . '">' . $type_term->name . '</a></li>';
+			
+				if( !empty($meeting_year) ) {
+				
+					$url = add_query_arg( array( LG_PREFIX . 'meeting_year' => $meeting_year ), $url );
+					$html .= '<li><a href="' . $url . '">' . $meeting_year . '</a></li>';
+				}
+			}
+		}
+	}
+	
+	$html .= '</ol>';
+	
+	$html = apply_filters( 'lg_breadcrumbs', $html ); 
+	
+	return $html;
+}
+
 function lg_get_archives( $args ) {
 	
 	global $wpdb, $wp_locale, $post;
@@ -20,19 +164,19 @@ function lg_get_archives( $args ) {
 	/**
 	 * Filter the default args
 	 * 
-	 * @param array  $defaults	An array of default args
-	 * @param array  $args	An array of user-provided args
+	 * @param array  $defaults
+	 * @param array  $args
 	 */
-	$defaults = apply_filters( 'lgarchives_default_args', $defaults , $args );
+	$defaults = apply_filters( 'lg_get_archives_default_args', $defaults , $args );
 	
 	$args = wp_parse_args( $args, $defaults );
 	
 	/**
-	 * Filter the shortcode attributes
+	 * Filter the args
 	 * 
-	 * @param array  $args	An array of user-provided attributes
+	 * @param array  $args
 	 */
-	$args = apply_filters( 'lgarchives_args', $args );
+	$args = apply_filters( 'lg_get_archives_args', $args );
 
 	$join = "";
 	
@@ -135,8 +279,47 @@ function lg_get_archives( $args ) {
 }
 
 
+function lg_get_directory( $args ) {
+	
+	$defaults = array(
+		'type' => 'postbypost',
+		'post_type' => LG_PREFIX . 'directory_member',
+		'order_by' => LG_PREFIX . 'directory_member_last_name ASC, '. LG_PREFIX . 'directory_member_first_name ASC',
+		'postmeta_keys' => array(LG_PREFIX . 'directory_member_last_name', LG_PREFIX . 'directory_member_first_name', LG_PREFIX . 'directory_member_group'),
+		'group_posts' => LG_PREFIX . 'directory_member_group',
+		'group_order' => 'ASC',
+		'template' => LG_BASE_DIR . '/templates/directory.php',
+		'template_options' => array(
+			'fields' => '',
+			'show_headers' => true
+		)
+	);
+	
+	/**
+	 * Filter the default args
+	 * 
+	 * @param array  $defaults
+	 * @param array  $args
+	 */
+	$defaults = apply_filters( 'lg_get_directory_default_args', $defaults , $args );
+	
+	$args = wp_parse_args( $args, $defaults );
+	
+	/**
+	 * Filter the args
+	 * 
+	 * @param array  $args
+	 */
+	$args = apply_filters( 'lg_get_directory_args', $args );
+	
+	return lg_get_archives( $args );
+}
+
 function lg_get_featured_posts( $options ) {
-    return apply_filters( 'lg_get_featured_posts', $options );
+
+	$featured_posts = localgov\FeaturedContent_Module::get_featured_posts( $options );
+
+	return apply_filters( 'lg_featured_posts', $featured_posts );
 }
 
 
@@ -152,23 +335,22 @@ function lg_get_featured( $args = array() ) {
 		'category_name' => ''
 	);
 	
-	
 	/**
 	 * Filter the default args
 	 * 
-	 * @param array  $defaults	An array of default args
-	 * @param array  $args	An array of user-provided args
+	 * @param array  $defaults
+	 * @param array  $args
 	 */
-	$defaults = apply_filters( 'lgfeatured_default_args', $defaults , $args );
+	$defaults = apply_filters( 'lg_get_featured_default_args', $defaults , $args );
 	
 	$args = wp_parse_args( $args, $defaults );
 	
 	/**
-	 * Filter the shortcode attributes
+	 * Filter the args
 	 * 
-	 * @param array  $args	An array of user-provided attributes
+	 * @param array  $args
 	 */
-	$args = apply_filters( 'lgfeatured_args', $args );
+	$args = apply_filters( 'lg_get_featured_args', $args );
 	
 	$options = array( 
 		'category_name' => $args['category_name']

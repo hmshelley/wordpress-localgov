@@ -12,63 +12,33 @@
 	</tr>
 	<?php endif; ?>
 	
+	<?php if( 
+		!isset( $args['template_options']['show_headers'] )
+		|| $args['template_options']['show_headers'] 
+	): ?>
+	<tr>
+		<?php foreach( $args['template_options']['fields'] as $field_name ): ?>
+			<th><small><?php echo apply_filters('lg_directory_member_field_header', $field_name ); ?></small></th>
+		<?php endforeach; ?>
+	</tr>
+	<?php endif; ?>
+	
 	<?php foreach( $grouped_result as $post ): ?>
-		<?php 
-			$member = get_post_meta( $post->ID, LG_PREFIX . 'directory_member' );
-			
-			$name = ( !empty ($member[0]['first_name'] ) ) ? $member[0]['first_name'] : '';
-			$name .= ( !empty ($member[0]['last_name'] ) ) ? ' ' . $member[0]['last_name'] : '';
-			$name = trim($name);
-			
-			$address = ( !empty ($member[0]['address'] ) ) ? $member[0]['address'] . '<br>' : '';
-			$address .= ( !empty ($member[0]['city'] ) ) ? $member[0]['city'] : '';
-			$address .= ( !empty ($member[0]['zip_code'] ) ) ? ', ' . $member[0]['zip_code'] : '';
-			
-			$member_link = '<a href="' . get_permalink() . '"';
-			if( !empty( $args['template_options']['member_link_attributes'] ) ) {
-				foreach( $args['template_options']['member_link_attributes'] as $key => $value ) {
-					$member_link .= ' ' . $key . '="' . $value . '"';
-				}
-			}
-			$member_link .= '>';
-		?>
+		<?php $member = get_post_meta( $post->ID, LG_PREFIX . 'directory_member' ); ?>
 	
 		<tr>
-			<?php foreach($args['template_options']['fields'] as $field): ?>
+			<?php foreach( $args['template_options']['fields'] as $field_name ): ?>
 			
 				<td>
-					<span class="<?php echo $field; ?>">
-					<?php 
-						switch($field) {
-							case 'photo': 
-								if( !empty( $member[0]['photo'] ) ) {
-									echo $member_link . wp_get_attachment_image( $member[0]['photo'], 'thumbnail' ) . '</a>';
-								}
-								break;
-							case 'name':
-								if( !empty( $member[0]['bio'] ) ) {
-									echo $member_link . $name . '</a>';	
-								}
-								else {
-									echo $name;
-								}
-								if ( !empty ($member[0]['title'] ) ) {
-									echo '<br>' . $member[0]['title'];
-								}
-								break;
-							case 'address':
-								echo $address;
-								break;
-							case 'phone':
-								if ( !empty ($member[0]['phone'] ) ) {
-									echo $member[0]['phone'];
-								}
-								break;
-							case 'email':
-								if ( !empty ($member[0]['email'] ) ) {
-									echo '<a href="mailto:' . $member[0]['email'] . '">' . $member[0]['email'] . '</a>';
-								}
-								break;
+					<span class="<?php echo $field_name; ?>">
+					<?php
+						if( isset ( $member[0] ) ) {
+							
+							$field_value = '';
+							if( isset( $member[0][$field_name] ) ) {
+								$field_value = $member[0][$field_name];
+							}
+							echo apply_filters('lg_directory_member_field_value', $field_value, $field_name, $member[0], $args );
 						}
 					?>
 					</span>

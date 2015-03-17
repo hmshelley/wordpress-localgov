@@ -26,11 +26,11 @@ class Newsletters_Module {
 		add_action( 'init', array( $this, 'init' ) );
 		add_action( 'wp', array( $this, 'wp' ) );
 		
-		add_filter( 'lgarchives_default_args', array( $this, 'filter_lgarchives_default_args' ), 10, 2 );
-		add_filter( 'lgarchives_args', array( $this, 'filter_lgarchives_args' ) );
+		add_filter( 'lg_get_archives_default_args', array( $this, 'filter_get_archives_default_args' ), 10, 2 );
+		add_filter( 'lg_get_archives_args', array( $this, 'filter_get_archives_args' ) );
 	}
 	
-	public static function filter_lgarchives_default_args( $defaults, $args ) {
+	public static function filter_get_archives_default_args( $defaults, $args ) {
 		
 		if(	
 			!isset( $args['post_type'] )
@@ -45,7 +45,7 @@ class Newsletters_Module {
 		return $defaults;
 	}
 	
-	public static function filter_lgarchives_args( $args ) {
+	public static function filter_get_archives_args( $args ) {
 		
 		if(	
 			!isset( $args['post_type'] )

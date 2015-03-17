@@ -37,9 +37,7 @@ class FeaturedContent_Module {
 		add_theme_support( 'post-thumbnails' );
 	}
 	
-	public static function init() {	
-		
-		add_filter( 'lg_get_featured_posts', array( __CLASS__, 'get_featured_posts' ), 10, 1 );
+	public static function init() {
 
 		add_action( 'pre_get_posts', array( __CLASS__, 'pre_get_posts' ) );
 		
@@ -104,9 +102,8 @@ class FeaturedContent_Module {
 		$featured_posts = get_posts( $args );
 
 		$featured_posts = array_merge( $sticky_posts, $featured_posts );
-
-		return apply_filters( 'lg_featured_posts', $featured_posts );
 		
+		return $featured_posts;
 	}
 
 	/**

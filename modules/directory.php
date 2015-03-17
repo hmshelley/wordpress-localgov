@@ -8,6 +8,8 @@ class Directory_Module {
 	 * Class variables
 	 */
 	private static $instance;
+	
+	private static $member_fields;
 
 	private function __construct() {
 		/* Don't do anything, needs to be initialized via instance() method */
@@ -24,8 +26,10 @@ class Directory_Module {
 	public function setup() {
 		
 		add_action( 'init', array( $this, 'init' ) );
-		add_shortcode( 'lgdirectory', array( __CLASS__, 'shortcode_lgdirectory' ) );
 		add_action( 'admin_menu', array( $this ,'add_import_page' ) );
+		
+		add_filter( 'lg_directory_member_field_header', array( __CLASS__, 'filter_member_field_header' ) );
+		add_filter( 'lg_directory_member_field_value', array( __CLASS__, 'filter_member_field_value' ), null, 4 );
 	}
 	
 	public function register_types() {
@@ -53,11 +57,19 @@ class Directory_Module {
 		) );
 	}
 	
+	public function get_member_fields() {
+		return $this->member_fields;
+	}
+	
+	public function set_member_fields( $member_fields ) {
+		$this->member_fields = $member_fields;
+	}
+	
 	public function init() {
 		
 		self::register_types();
 		
-		$member_fields = new \Fieldmanager_Group( array(
+		$this->member_fields = new \Fieldmanager_Group( array(
 			'name' => LG_PREFIX . 'directory_member',
 			'children' => array(
 				'first_name' => new \Fieldmanager_Textfield( 'First Name', array(
@@ -90,34 +102,10 @@ class Directory_Module {
 			)
 		) );
 		
-		$member_fields->add_meta_box( 'Directory Member', array( LG_PREFIX . 'directory_member' ) );
+		$this->member_fields->add_meta_box( 'Directory Member', array( LG_PREFIX . 'directory_member' ) );
 		
-	}
-	
-	public static function shortcode_lgdirectory( $atts ) {
+		do_action( 'lg_directory_module_init' );
 		
-		$defaults = array(
-			'fields' => 'name, phone, email'
-		);
-		$atts = shortcode_atts( $defaults, $atts, 'lgdirectory' );
-				
-		$args = array(
-			'type' => 'postbypost',
-			'post_type' => LG_PREFIX . 'directory_member',
-			'order_by' => LG_PREFIX . 'directory_member_last_name ASC, '. LG_PREFIX . 'directory_member_first_name ASC',
-			'postmeta_keys' => array(LG_PREFIX . 'directory_member_last_name', LG_PREFIX . 'directory_member_first_name', LG_PREFIX . 'directory_member_group'),
-			'group_posts' => LG_PREFIX . 'directory_member_group',
-			'group_order' => 'ASC',
-			'template' => LG_BASE_DIR . '/templates/directory.php'
-		);
-		
-		if( !empty( $atts['fields'] ) ) {
-			$args['template_options']['fields'] = preg_split("/[\s,]+/", $atts['fields'] );
-		}
-		
-		$args = apply_filters( 'lgdirectory_args', $args );
-		
-		return lg_get_archives( $args );
 	}
 	
 	function add_import_page() {
@@ -334,6 +322,70 @@ class Directory_Module {
         
         $this->log['notice'][] = $count . ' members imported successfully.';
     	$this->print_messages();
+	}
+	
+	public function filter_member_field_value( $field_value, $field_name, $member, $args ) {
+		
+		$name = ( !empty ($member['first_name'] ) ) ? $member['first_name'] : '';
+		$name .= ( !empty ($member['last_name'] ) ) ? ' ' . $member['last_name'] : '';
+		$name = trim($name);
+		
+		$address = ( !empty ($member['address'] ) ) ? $member['address'] . '<br>' : '';
+		$address .= ( !empty ($member['city'] ) ) ? $member['city'] : '';
+		$address .= ( !empty ($member['zip_code'] ) ) ? ', ' . $member['zip_code'] : '';
+		
+		$member_link = '<a href="' . get_permalink() . '"';
+		if( !empty( $args['template_options']['member_link_attributes'] ) ) {
+			foreach( $args['template_options']['member_link_attributes'] as $key => $value ) {
+				$member_link .= ' ' . $key . '="' . $value . '"';
+			}
+		}
+		$member_link .= '>';
+		
+		switch( $field_name ) {
+		
+			case 'photo': 
+				if( !empty( $field_value ) ) {
+					$field_value = $member_link . wp_get_attachment_image( $field_value, 'thumbnail' ) . '</a>';
+				}
+				break;
+				
+			case 'name':
+				if( !empty( $member['bio'] ) ) {
+					$field_value = $member_link . $name . '</a>';	
+				}
+				else {
+					$field_value = $name;
+				}
+				if ( !empty ( $member['title'] ) ) {
+					$field_value .= '<br>' . $name;
+				}
+				break;
+				
+			case 'address':
+				$field_value = $address;
+				break;
+				
+			case 'email':
+				if ( !empty ( $field_value ) ) {
+					$field_value = '<a href="mailto:' . $field_value . '">' . $field_value . '</a>';
+				}
+				break;
+		}
+		
+		return $field_value;
+	}
+	
+	public function filter_member_field_header( $field_name ) {
+		$field_header = str_replace( '_', ' ', $field_name );
+		$field_header = ucwords( $field_header );
+		
+		switch( $field_name ) {
+			case 'photo':
+				$field_header = '';
+		}
+		
+		return $field_header;
 	}
 }
 

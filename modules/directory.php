@@ -358,7 +358,7 @@ class Directory_Module {
 					$field_value = $name;
 				}
 				if ( !empty ( $member['title'] ) ) {
-					$field_value .= '<br>' . $name;
+					$field_value .= '<br>' . $member['title'];
 				}
 				break;
 				

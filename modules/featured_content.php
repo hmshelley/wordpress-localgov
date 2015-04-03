@@ -61,8 +61,12 @@ class FeaturedContent_Module {
 				'title' => new \Fieldmanager_Textfield( __('Featured Title (Post/Page title is used if not specified)'), array(
 					'index' => LG_PREFIX . 'featured_title'
 				) ),
-				'show_more_link' => new \Fieldmanager_Checkbox( __('Show "Read More" link'), array(
-					'default_value' => true
+				'more_link' => new \Fieldmanager_Select( __('"Read More" link'), array(
+					'options' => array(
+						'show' => 'Show',
+						'hide' => 'Hide'
+					),
+					'default_value' => 'show'
 				) )
 			)
 		) );
@@ -71,7 +75,7 @@ class FeaturedContent_Module {
 	}
 
 	public static function get_featured_posts( $options = array() ) {
-			
+		
 		$args = array(
 			'numberposts' => self::$max_posts,
 			'post_type' => self::$post_types,
@@ -114,9 +118,13 @@ class FeaturedContent_Module {
 		// Bail if admin or not main query.
 		if ( 
 			is_admin()
-			|| ! $query->is_main_query()
-			|| is_single()
-		
+			|| !$query->is_main_query()
+			// is_front_page() doesn't work in pre_get_posts yet, so check if home and static front page
+			|| !(
+				$query->is_home()
+				|| $query->get('page_id') == get_option('page_on_front')
+				|| $query->is_archive()
+			)
 		) {
 			return;
 		}
@@ -125,7 +133,7 @@ class FeaturedContent_Module {
 			'numberposts' => self::$max_posts,
 			'post_type' => self::$post_types,
 			'meta_key' => LG_PREFIX . 'featured_exclude',
-			'meta_value' => true,
+			'meta_value' => true
 		) );
 		
 		// Bail if nothing to exclude

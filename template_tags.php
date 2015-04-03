@@ -146,20 +146,29 @@ function lg_get_breadcrumbs() {
 
 function lg_get_archives( $args ) {
 	
-	global $wpdb, $wp_locale, $post;
+	global $wpdb, $wp_locale;
 	
 	$defaults = array (
-		'type' => 'yearly',
+		'type' => 'yearly', // values: yearly, postbypost, future: monthly, daily, weekly
 		'post_type' => 'post',
+		'format' => 'list', // values: list, feed, future: table, grid, gallery
+		'content_format' => 'link', // values: link, teaser, full
 		'limit' => '',
 		'order_by' => 'post_date DESC',
-		'date_key' => '',
-		'group_posts' => '',
+		'date_key' => '',	// for grouping by date field other than post_date
+		'group_posts' => '', // only applies to archives of type 'postbypost', values: year, academicyear, custom field name
 		'group_order' => '',
 		'postmeta_keys' => array(),
 		'template' => LG_BASE_DIR . '/templates/archive.php',
-		'template_options' => array()
+		'template_options' => array(),
+		'paging' => true
 	);
+	
+	// Change format defaults if postbypost
+	if( 'postbypost' == $args['type'] ) {
+		$defaults['format'] = 'feed';
+		$defaults['content_format'] = 'teaser';
+	}
 	
 	/**
 	 * Filter the default args
@@ -227,6 +236,7 @@ function lg_get_archives( $args ) {
 				$output .= get_archives_link( $url, $text );
 			}
 		}
+		
 	} elseif ( 'postbypost' == $args['type'] ) {
 		
 		$group_posts = $args['group_posts'];
@@ -238,7 +248,7 @@ function lg_get_archives( $args ) {
 		}
 		
 		$query = "SELECT *, $date_col AS `date_col` $group_interval_col $postmeta_fields FROM $wpdb->posts $join $where ORDER BY $order_by $limit";
-	
+		
 		$posts = $wpdb->get_results( $query );
 		
 		$grouped_results = array( $posts );

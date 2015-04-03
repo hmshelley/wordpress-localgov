@@ -72,13 +72,14 @@ class Shortcodes {
 		$args_key_map = array(
 			'type' => 'type',
 			'posttype' => 'post_type',
+			'format' => 'format',
+			'contentformat' => 'content_format',
 			'limit' => 'limit',
 			'orderby' => 'order_by',
 			'groupposts' => 'group_posts',
 			'grouporder' => 'group_order',
-			'postmetakeys' => 'postmeta_keys',
-			'datekey' => 'date_key',
-			'template' => 'template'
+			'template' => 'template',
+			'paging' => 'paging'
 		);
 		
 		$args = array();

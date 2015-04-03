@@ -7,11 +7,12 @@ class Localgov {
 	private static $instance;
 
 	static $modules = array(
+		'directory',
+		'featured_content',
 		'meetings',
 		'newsletters',
-		'featured_content',
 		'submenus',
-		'directory'
+		'template_options'
 	);
 	
 	static $widgets = array(

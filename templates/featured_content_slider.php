@@ -14,9 +14,8 @@
 		
 		<?php foreach( $featured_posts as $i => $post ) : setup_postdata( $post ); ?>
 		
-		<div class="lg-slide lg-slide-<?php echo $i ?> item<?php echo ($i == 0) ? ' active' : '' ?>">
-			<div class="row">
-				<div class="col-md-4">
+		<div class="row lg-slide lg-slide-<?php echo $i ?> item<?php echo ($i == 0) ? ' active' : '' ?>">
+				<div class="col-md-4 lg-slide-col-content">
 					<div class="lg-slide-content">
 						<?php
 						
@@ -38,7 +37,7 @@
 						
 					</div>
 				</div>
-				<div class="col-md-8">
+				<div class="col-md-8 lg-slide-col-image">
 					<?php 
 						if( has_post_thumbnail() ) {
 							echo '<div class="lg-slide-mobile-image">';
@@ -58,11 +57,9 @@
 						}
 					?>
 				</div>
-			</div>
-		</div><!-- /.item -->
+		</div><!-- /.lg-slide -->
 		
-		<?php endforeach; ?>
-		<?php wp_reset_postdata(); ?>
+		<?php endforeach; wp_reset_postdata(); ?>
 		
 	</div><!-- /.carousel-inner -->
 	

@@ -23,7 +23,9 @@
 	</tr>
 	<?php endif; ?>
 	
-	<?php foreach( $grouped_result as $post ): ?>
+	<?php global $post; ?>
+	<?php foreach( $grouped_result as $post ): setup_postdata($post); ?>
+		
 		<?php $member = get_post_meta( $post->ID, LG_PREFIX . 'directory_member' ); ?>
 	
 		<tr>
@@ -47,7 +49,7 @@
 			<?php endforeach; ?>	
 		</tr>
 		
-	<?php endforeach; ?>
+	<?php endforeach; wp_reset_postdata(); ?>
 	
 <?php endforeach; ?>
 

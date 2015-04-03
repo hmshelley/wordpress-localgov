@@ -42,6 +42,7 @@ class Meetings_Module {
 		
 		register_taxonomy( LG_PREFIX . 'meeting_type', LG_PREFIX . 'meeting', array(
 			'label' => __( 'Meeting Types' ),
+			'hierarchical' => true,
 			'rewrite' => array( 'slug' => 'meetings/types' )
 		) );
 	
@@ -67,12 +68,12 @@ class Meetings_Module {
 		$meeting_fields = new \Fieldmanager_Group( array(
 			'name' => LG_PREFIX . 'meeting',
 			'children' => array(
-				'type' => new \Fieldmanager_Select( 'Type', array(
+				/*'type' => new \Fieldmanager_Select( 'Type', array(
 					'datasource' => new \Fieldmanager_Datasource_Term( array(
 						'taxonomy' => LG_PREFIX . 'meeting_type'
 					) ),
 					'index' => LG_PREFIX . 'meeting_type'
-				) ),
+				) ),*/
 				'date' => new \Fieldmanager_Datepicker( 'Date', array(
 					'index' => LG_PREFIX . 'meeting_date',
 					'use_time' => true
@@ -95,7 +96,7 @@ class Meetings_Module {
 		
 		$meeting_fields->add_meta_box( 'Meeting', array( LG_PREFIX . 'meeting' ) );
 	
-		add_filter( 'wp_unique_post_slug', function( $slug ) {
+		add_filter( 'wp_unique_post_slug', function( $slug, $post_ID, $post_status, $post_type, $post_parent, $original_slug ) {
 		
 			if ( LG_PREFIX . 'meeting' != get_post_type() ) {
 				return $slug;
@@ -104,41 +105,36 @@ class Meetings_Module {
 			$post = get_post();
 			
 			// Just create friendly slug on first save
-			if ( !empty($post->post_name) ) {
+			if ( !empty( $post->post_name ) ) {
 				return $slug;
 			}
 			
-			// Only change slug if type or date provided
+			// Only change slug if type and date provided
 			if( 
-				empty( $_POST[LG_PREFIX . 'meeting']['type'] )
-				&& empty( $_POST[LG_PREFIX . 'meeting']['date'] )
+				empty( $_POST['tax_input'][LG_PREFIX . 'meeting_type'][1] )
+				|| empty( $_POST[LG_PREFIX . 'meeting']['date'] ) 
 			) {
 				return $slug;
 			}
 			
 			$slug = '';
 			
-			$meeting = $_POST[LG_PREFIX . 'meeting'];
+			$term_id = $_POST['tax_input'][LG_PREFIX . 'meeting_type'][1];
+			$term = get_term( $term_id, LG_PREFIX . 'meeting_type' );
 			
-			if( !empty( $meeting['type'] ) ) {
-				$term = get_term_by( 'id', $meeting['type'], LG_PREFIX . 'meeting_type' );
-				
-				if( !empty($term->slug) ) {
-					$slug .= $term->slug;
-				}
+			if( !empty( $term->slug ) ) {
+				$slug .= $term->slug . '-';
 			}
 			
+			$meeting = $_POST[LG_PREFIX . 'meeting'];
+			
 			if( !empty( $meeting['date']['date']) ) {
-				
-				if( !empty($slug) ) {
-					$slug .= '-';
-				}
-				
-				$slug .= date( 'Y-m-d', strtotime($meeting['date']['date']) );
+								
+				$slug .= date( 'Y-m-d', strtotime( $meeting['date']['date'] ) );
 			}
 	
 			return $slug;
-		} );
+		}, 10, 6 );
 		
 		// Add meeting date to title
 		add_filter( 'the_title', function( $title ) {

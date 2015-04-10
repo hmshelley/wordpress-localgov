@@ -8,8 +8,6 @@ class TemplateOptions_Module {
 	 * Class variables
 	 */
 	private static $instance;
-	
-	public static $post_types = array( 'post', 'page' );	
 
 	private function __construct() {
 		/* Don't do anything, needs to be initialized via instance() method */
@@ -30,7 +28,7 @@ class TemplateOptions_Module {
 	public static function init() {
 				
 		// Add meta box with options to override title and excerpt
-		$template_options_fields = new \Fieldmanager_Group( array(
+		$page_template_options_fields = new \Fieldmanager_Group( array(
 			'name' => LG_PREFIX . 'template_options',
 			'children' => array(
 				'page_header' => new \Fieldmanager_Select( __('Page header'), array(
@@ -73,7 +71,23 @@ class TemplateOptions_Module {
 			)
 		) );
 		
-		$template_options_fields->add_meta_box( 'Template Options', self::$post_types, 'side' );
+		$page_template_options_fields->add_meta_box( 'Template Options', 'page', 'side' );
+		
+		// Posts don't have same template options as pages
+		$post_template_options_fields = new \Fieldmanager_Group( array(
+			'name' => LG_PREFIX . 'template_options',
+			'children' => array(
+				'featured_image' => new \Fieldmanager_Select( __('Featured Image'), array(
+					'options' => array(
+						'show' => 'Show',
+						'hide' => 'Hide',
+					),
+					'default_value' => 'show'
+				) )
+			)
+		) );
+		
+		$post_template_options_fields->add_meta_box( 'Template Options', 'post', 'side' );
 	}
 }
 

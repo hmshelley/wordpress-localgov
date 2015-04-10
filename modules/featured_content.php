@@ -55,7 +55,7 @@ class FeaturedContent_Module {
 				'featured_categories' => new \Fieldmanager_Checkbox( __('Featured in content sliders for  categories'), array(
 					'index' => LG_PREFIX . 'featured_categories'
 				) ),
-				'exclude' => new \Fieldmanager_Checkbox( __('Exclude from front page and archives'), array(
+				'exclude' => new \Fieldmanager_Checkbox( __('Exclude from front page'), array(
 					'index' => LG_PREFIX . 'featured_exclude'
 				) ),
 				'title' => new \Fieldmanager_Textfield( __('Featured Title (Post/Page title is used if not specified)'), array(
@@ -122,8 +122,7 @@ class FeaturedContent_Module {
 			// is_front_page() doesn't work in pre_get_posts yet, so check if home and static front page
 			|| !(
 				$query->is_home()
-				|| $query->get('page_id') == get_option('page_on_front')
-				|| $query->is_archive()
+				// || $query->get('page_id') == get_option('page_on_front')
 			)
 		) {
 			return;

@@ -4,7 +4,7 @@ namespace {
 
 function lg_get_featured_posts( $options ) {
 
-	$featured_posts = localgov\FeaturedContent_Module::get_featured_posts( $options );
+	$featured_posts = localgov\Featured_Module::get_featured_posts( $options );
 
 	return apply_filters( 'lg_featured_posts', $featured_posts );
 }
@@ -18,7 +18,7 @@ function lg_get_featured( $args = array() ) {
 	$lg_featured_id++;
 	
 	$defaults = array (
-		'template' => LG_BASE_DIR . '/templates/featured_content_slider.php',
+		'template' => LG_BASE_DIR . '/templates/featured_slider.php',
 		'category_name' => ''
 	);
 	
@@ -54,7 +54,7 @@ function lg_get_featured( $args = array() ) {
 
 namespace localgov {
 
-class FeaturedContent_Module {
+class Featured_Module {
 	
 	/**
 	 * Class variables
@@ -71,7 +71,7 @@ class FeaturedContent_Module {
 	
 	public static function instance() {
 		if ( ! isset( self::$instance ) ) {
-			self::$instance = new FeaturedContent_Module;
+			self::$instance = new Featured_Module;
 			self::$instance->setup();
 		}
 		return self::$instance;
@@ -227,6 +227,6 @@ class FeaturedContent_Module {
 	
 }
 
-FeaturedContent_Module::instance();
+Featured_Module::instance();
 
 }

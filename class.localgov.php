@@ -8,7 +8,7 @@ class Localgov {
 
 	static $modules = array(
 		'directory',
-		'featured_content',
+		'featured',
 		'meetings',
 		'newsletters',
 		'submenus',

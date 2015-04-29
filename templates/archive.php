@@ -31,6 +31,7 @@
 				<?php else: ?>
 					<?php set_query_var( 'content_format', $args['content_format'] ); ?>
 					<?php get_template_part( 'content', get_post_type() ); ?>
+					<?php //echo $post->date_col ; ?>
 				<?php endif; ?>	
 				
 			<?php echo $after; ?>
@@ -39,8 +40,8 @@
 			
 	<?php echo $wrapper_after; ?>
 	
-	<?php if( $args['paging'] ): ?>
-	<?php echo lg_paging_nav(); ?>
-	<?php endif; ?>
-	
 <?php endforeach; ?>
+
+<?php if( $args['paging'] ): ?>
+<?php //echo lg_paging_nav(); ?>
+<?php endif; ?>

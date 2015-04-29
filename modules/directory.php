@@ -1,6 +1,46 @@
 <?php
 
-namespace localgov;
+namespace {
+
+function lg_get_directory( $args ) {
+	
+	$defaults = array(
+		'type' => 'postbypost',
+		'post_type' => LG_PREFIX . 'directory_member',
+		'order_by' => LG_PREFIX . 'directory_member_last_name ASC, '. LG_PREFIX . 'directory_member_first_name ASC',
+		'postmeta_keys' => array(LG_PREFIX . 'directory_member_last_name', LG_PREFIX . 'directory_member_first_name', LG_PREFIX . 'directory_member_group'),
+		'group_posts' => LG_PREFIX . 'directory_member_group',
+		'group_order' => 'ASC',
+		'template' => LG_BASE_DIR . '/templates/directory.php',
+		'template_options' => array(
+			'fields' => '',
+			'show_headers' => true
+		)
+	);
+	
+	/**
+	 * Filter the default args
+	 * 
+	 * @param array  $defaults
+	 * @param array  $args
+	 */
+	$defaults = apply_filters( 'lg_get_directory_default_args', $defaults , $args );
+	
+	$args = wp_parse_args( $args, $defaults );
+	
+	/**
+	 * Filter the args
+	 * 
+	 * @param array  $args
+	 */
+	$args = apply_filters( 'lg_get_directory_args', $args );
+	
+	return lg_get_archives( $args );
+}
+
+}
+
+namespace localgov {
 
 class Directory_Module {
 	
@@ -8,8 +48,6 @@ class Directory_Module {
 	 * Class variables
 	 */
 	private static $instance;
-	
-	private static $member_fields;
 
 	private function __construct() {
 		/* Don't do anything, needs to be initialized via instance() method */
@@ -26,6 +64,7 @@ class Directory_Module {
 	public function setup() {
 		
 		add_action( 'init', array( $this, 'init' ) );
+		add_action( 'cmb2_init', array( $this, 'cmb2_init' ) );
 		add_action( 'admin_menu', array( $this ,'add_import_page' ) );
 		
 		add_filter( 'lg_directory_member_field_header', array( __CLASS__, 'filter_member_field_header' ) );
@@ -37,7 +76,8 @@ class Directory_Module {
 		register_taxonomy( LG_PREFIX . 'directory_group', LG_PREFIX . 'directory_member', array(
 			'label' => __( 'Directory Groups' ),
 			'hierarchical' => true,
-			'sort' => true
+			'sort' => true,
+			'show_admin_column' => true
 		) );
 	
 		register_post_type( LG_PREFIX . 'directory_member', array(
@@ -57,55 +97,81 @@ class Directory_Module {
 		) );
 	}
 	
-	public function get_member_fields() {
-		return $this->member_fields;
-	}
-	
-	public function set_member_fields( $member_fields ) {
-		$this->member_fields = $member_fields;
-	}
-	
 	public function init() {
+	
+		self::register_types();	
+	}
+	
+	function cmb2_init() {
 		
-		self::register_types();
-		
-		$this->member_fields = new \Fieldmanager_Group( array(
-			'name' => LG_PREFIX . 'directory_member',
-			'children' => array(
-				'first_name' => new \Fieldmanager_Textfield( 'First Name', array(
-					'index' => LG_PREFIX . 'directory_member_first_name'
-				) ),
-				'last_name' => new \Fieldmanager_Textfield( 'Last Name', array(
-					'index' => LG_PREFIX . 'directory_member_last_name'
-				) ),
-				'title' => new \Fieldmanager_Textfield( 'Title' ),
-				'address' => new \Fieldmanager_TextArea( 'Address', array(
-					'attributes' => array(
-						'cols' => 50,
-						'rows' => 2
-					)
-				)),
-				'city' => new \Fieldmanager_Textfield( 'City' ),
-				'zip_code' => new \Fieldmanager_Textfield( 'Zip Code', array(
-					'index' => LG_PREFIX . 'directory_member_zip_code'
-				)),
-				'phone' => new \Fieldmanager_Textfield( 'Phone', array(
-					'index' => LG_PREFIX . 'directory_member_phone'
-				) ),
-				'email' => new \Fieldmanager_Textfield( 'Email', array(
-					'index' => LG_PREFIX . 'directory_member_email'
-				) ),
-				'photo' => new \Fieldmanager_Media( 'Photo', array(
-					'index' => '_thumbnail_id'
-				) ),
-				'bio' => new \Fieldmanager_TextArea( 'Bio' )
-			)
+		$member_metabox = new_cmb2_box( array(
+			'id' => LG_PREFIX . 'directory_member',
+			'title' => __( 'Directory Member', 'localgov' ),
+			'object_types' => array( LG_PREFIX . 'directory_member' ),
+			'context' => 'normal',
+			'priority' => 'high',
+			'show_names' => true
 		) );
 		
-		$this->member_fields->add_meta_box( 'Directory Member', array( LG_PREFIX . 'directory_member' ) );
+		$member_metabox->add_field( array(
+			'name' => __( 'First Name', 'localgov' ),
+			'id' => LG_PREFIX . 'directory_member_first_name',
+			'type' => 'text'
+		) );
 		
-		do_action( 'lg_directory_module_init' );
+		$member_metabox->add_field( array(
+			'name' => __( 'Last Name', 'localgov' ),
+			'id' => LG_PREFIX . 'directory_member_last_name',
+			'type' => 'text'
+		) );
 		
+		$member_metabox->add_field( array(
+			'name' => __( 'Title', 'localgov' ),
+			'id' => LG_PREFIX . 'directory_member_title',
+			'type' => 'text'
+		) );
+		
+		$member_metabox->add_field( array(
+			'name' => __( 'Address', 'localgov' ),
+			'id' => LG_PREFIX . 'directory_member_address',
+			'type' => 'textarea_small'
+		) );
+		
+		$member_metabox->add_field( array(
+			'name' => __( 'City', 'localgov' ),
+			'id' => LG_PREFIX . 'directory_member_city',
+			'type' => 'text'
+		) );
+		
+		$member_metabox->add_field( array(
+			'name' => __( 'Zip Code', 'localgov' ),
+			'id' => LG_PREFIX . 'directory_member_zip_code',
+			'type' => 'text'
+		) );
+		
+		$member_metabox->add_field( array(
+			'name' => __( 'Phone', 'localgov' ),
+			'id' => LG_PREFIX . 'directory_member_phone',
+			'type' => 'text'
+		) );
+		
+		$member_metabox->add_field( array(
+			'name' => __( 'Email', 'localgov' ),
+			'id' => LG_PREFIX . 'directory_member_email',
+			'type' => 'text_email'
+		) );
+		
+		$member_metabox->add_field( array(
+			'name' => __( 'Photo', 'localgov' ),
+			'id' => '_thumbnail',
+			'type' => 'file'
+		) );
+		
+		$member_metabox->add_field( array(
+			'name' => __( 'Bio', 'localgov' ),
+			'id' => LG_PREFIX . 'directory_member_bio',
+			'type' => 'wysiwyg'
+		) );
 	}
 	
 	function add_import_page() {
@@ -294,26 +360,36 @@ class Directory_Module {
 					return;
 				}
 			}
-			
-			update_post_meta( $post['ID'], LG_PREFIX . 'directory_member', $member);
 				
-			if( !empty( $member['first_name'] ) ) {
+			if( isset( $member['first_name'] ) ) {
 				update_post_meta( $post['ID'], LG_PREFIX . 'directory_member_first_name', $member['first_name'] );
 			}
 			
-			if( !empty( $member['last_name'] ) ) {
+			if( isset( $member['last_name'] ) ) {
 				update_post_meta( $post['ID'], LG_PREFIX . 'directory_member_last_name', $member['last_name'] );
 			}
 			
-			if( !empty( $member['zip_code'] ) ) {
+			if( isset( $member['title'] ) ) {
+				update_post_meta( $post['ID'], LG_PREFIX . 'directory_member_title', $member['title'] );
+			}
+			
+			if( isset( $member['address'] ) ) {
+				update_post_meta( $post['ID'], LG_PREFIX . 'directory_member_address', $member['address'] );
+			}
+			
+			if( isset( $member['city'] ) ) {
+				update_post_meta( $post['ID'], LG_PREFIX . 'directory_member_city', $member['city'] );
+			}
+			
+			if( isset( $member['zip_code'] ) ) {
 				update_post_meta( $post['ID'], LG_PREFIX . 'directory_member_zip_code', $member['zip_code'] );
 			}
 			
-			if( !empty( $member['phone'] ) ) {
+			if( isset( $member['phone'] ) ) {
 				update_post_meta( $post['ID'], LG_PREFIX . 'directory_member_phone', $member['phone'] );
 			}
 			
-			if( !empty( $member['email'] ) ) {
+			if( isset( $member['email'] ) ) {
 				update_post_meta( $post['ID'], LG_PREFIX . 'directory_member_email', $member['email'] );
 			}
         	
@@ -326,14 +402,6 @@ class Directory_Module {
 	
 	public function filter_member_field_value( $field_value, $field_name, $member, $args ) {
 		
-		$name = ( !empty ($member['first_name'] ) ) ? $member['first_name'] : '';
-		$name .= ( !empty ($member['last_name'] ) ) ? ' ' . $member['last_name'] : '';
-		$name = trim($name);
-		
-		$address = ( !empty ($member['address'] ) ) ? $member['address'] . '<br>' : '';
-		$address .= ( !empty ($member['city'] ) ) ? $member['city'] : '';
-		$address .= ( !empty ($member['zip_code'] ) ) ? ', ' . $member['zip_code'] : '';
-		
 		$member_link = '<a href="' . get_permalink() . '"';
 		if( !empty( $args['template_options']['member_link_attributes'] ) ) {
 			foreach( $args['template_options']['member_link_attributes'] as $key => $value ) {
@@ -344,13 +412,19 @@ class Directory_Module {
 		
 		switch( $field_name ) {
 		
-			case 'photo': 
-				if( !empty( $field_value ) ) {
-					$field_value = $member_link . wp_get_attachment_image( $field_value, 'thumbnail' ) . '</a>';
+			case 'thumbnail':
+				
+				if( has_post_thumbnail() ) {
+					$field_value = $member_link . get_the_post_thumbnail( get_the_ID(), 'thumbnail' ) . '</a>';
 				}
 				break;
 				
 			case 'name':
+			
+				$name = ( !empty ($member['first_name'] ) ) ? $member['first_name'] : '';
+				$name .= ( !empty ($member['last_name'] ) ) ? ' ' . $member['last_name'] : '';
+				$name = trim($name);
+			
 				if( !empty( $member['bio'] ) ) {
 					$field_value = $member_link . $name . '</a>';	
 				}
@@ -363,6 +437,10 @@ class Directory_Module {
 				break;
 				
 			case 'address':
+				$address = ( !empty ($member['address'] ) ) ? $member['address'] . '<br>' : '';
+				$address .= ( !empty ($member['city'] ) ) ? $member['city'] : '';
+				$address .= ( !empty ($member['zip_code'] ) ) ? ', ' . $member['zip_code'] : '';
+				
 				$field_value = $address;
 				break;
 				
@@ -381,7 +459,7 @@ class Directory_Module {
 		$field_header = ucwords( $field_header );
 		
 		switch( $field_name ) {
-			case 'photo':
+			case 'thumbnail':
 				$field_header = '';
 		}
 		
@@ -390,3 +468,5 @@ class Directory_Module {
 }
 
 Directory_Module::instance();
+
+}

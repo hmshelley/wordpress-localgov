@@ -18,6 +18,12 @@ if( file_exists( LG_CUSTOM_DIR . '/config.php' ) ) {
 }
 
 defined( 'LG_PREFIX' )   or define( 'LG_PREFIX', 'lg_' );
+defined( 'LG_ADMIN_MENU_SLUG' )	or define( 'LG_ADMIN_MENU_SLUG', 'localgov-site-settings' );
+
+/**
+ * Exception Class for classes that could not be loaded
+ */
+class LG_Class_Not_Found_Exception extends Exception { }
 
 /** 
  * Load classes
@@ -29,7 +35,6 @@ function localgov_load_class( $class ) {
 	}
 	
 	$filename = str_replace( 'localgov\\' , '', $class );
-	$filename = str_replace( 'FM_' , 'fm-', $filename );
 	$filename = str_replace( '_' , '-', $filename );
 	$filename = strtolower(preg_replace('/([a-z])([A-Z])/', '$1-$2', $filename));
 		
@@ -44,28 +49,22 @@ function localgov_load_class( $class ) {
 
 localgov_load_class( 'localgov\Localgov' );
 
-function localgov_init() {
-		
-	if ( is_admin() ) {
-		localgov_load_class( 'localgov\Admin' );
-	}
-	
-	localgov\Localgov::load_modules();
-	
-	require 'template_tags.php';
-	
-	localgov_load_class( 'localgov\Shortcodes' );
-	
-}
-add_action('plugins_loaded', 'localgov_init');
-
-add_action( 'widgets_init', array( 'localgov\Localgov', 'load_widgets' ) );
-
 register_activation_hook( __FILE__, array( 'localgov\Localgov', 'plugin_activation' ) );
 register_deactivation_hook( __FILE__, array( 'localgov\Localgov', 'plugin_deactivation' ) );
 
+if ( is_admin() ) {
 
-/**
- * Exception Class for classes that could not be loaded
- */
-class LG_Class_Not_Found_Exception extends Exception { }
+	require_once  __DIR__ . '/cmb2/init.php';
+	
+	localgov_load_class( 'localgov\SiteSettings' );
+	localgov_load_class( 'localgov\Settings' );
+	localgov_load_class( 'localgov\NetworkSettings' );
+}
+	
+require_once __DIR__ . '/template_tags.php';
+
+localgov\Localgov::load_modules();
+
+localgov_load_class( 'localgov\Shortcodes' );
+
+add_action( 'widgets_init', array( 'localgov\Localgov', 'load_widgets' ) );

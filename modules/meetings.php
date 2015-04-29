@@ -24,6 +24,7 @@ class Meetings_Module {
 	public function setup() {
 		
 		add_action( 'init', array( $this, 'init' ) );
+		add_action( 'cmb2_init', array( $this, 'cmb2_init' ) );
 		add_action( 'pre_get_posts', array( $this, 'pre_get_posts' ) );
 	}
 	
@@ -43,7 +44,12 @@ class Meetings_Module {
 		register_taxonomy( LG_PREFIX . 'meeting_type', LG_PREFIX . 'meeting', array(
 			'label' => __( 'Meeting Types' ),
 			'hierarchical' => true,
-			'rewrite' => array( 'slug' => 'meetings/types' )
+			'show_admin_column' => true,
+			'rewrite' => array( 
+				'slug' => 'meetings/types',
+				'hierarchical' => true
+			)
+			
 		) );
 	
 		register_post_type( LG_PREFIX . 'meeting', array(
@@ -59,42 +65,12 @@ class Meetings_Module {
 			),
 			'supports' => array( 'title' )
 		) );
+		
 	}
 	
 	public function init() {
 		
 		self::register_types();
-		
-		$meeting_fields = new \Fieldmanager_Group( array(
-			'name' => LG_PREFIX . 'meeting',
-			'children' => array(
-				/*'type' => new \Fieldmanager_Select( 'Type', array(
-					'datasource' => new \Fieldmanager_Datasource_Term( array(
-						'taxonomy' => LG_PREFIX . 'meeting_type'
-					) ),
-					'index' => LG_PREFIX . 'meeting_type'
-				) ),*/
-				'date' => new \Fieldmanager_Datepicker( 'Date', array(
-					'index' => LG_PREFIX . 'meeting_date',
-					'use_time' => true
-				) ),
-				'description' => new \Fieldmanager_Textfield( 'Description' ),
-				'agenda_file' => new \Fieldmanager_Media( 'Agenda File' ),
-				'minutes_file' => new \Fieldmanager_Media( 'Minutes File' ),
-				'files' => new \Fieldmanager_Group( array(
-					'limit' => 0,
-					'label' => 'Meeting File',
-					'label_macro' => array( 'Meeting File: %s', 'title' ),
-					'add_more_label' => 'Add Another Meeting File',
-					'children' => array(
-						'title' => new \Fieldmanager_Textfield( 'Title' ),
-						'file' => new \Fieldmanager_Media( 'File' )
-					)
-				) )
-			)
-		) );
-		
-		$meeting_fields->add_meta_box( 'Meeting', array( LG_PREFIX . 'meeting' ) );
 	
 		add_filter( 'wp_unique_post_slug', function( $slug, $post_ID, $post_status, $post_type, $post_parent, $original_slug ) {
 		
@@ -112,7 +88,7 @@ class Meetings_Module {
 			// Only change slug if type and date provided
 			if( 
 				empty( $_POST['tax_input'][LG_PREFIX . 'meeting_type'][1] )
-				|| empty( $_POST[LG_PREFIX . 'meeting']['date'] ) 
+				|| empty( $_POST[LG_PREFIX . 'meeting_date'] ) 
 			) {
 				return $slug;
 			}
@@ -126,11 +102,9 @@ class Meetings_Module {
 				$slug .= $term->slug . '-';
 			}
 			
-			$meeting = $_POST[LG_PREFIX . 'meeting'];
-			
-			if( !empty( $meeting['date']['date']) ) {
+			if( !empty( $_POST[LG_PREFIX .'meeting_date']['date']) ) {
 								
-				$slug .= date( 'Y-m-d', strtotime( $meeting['date']['date'] ) );
+				$slug .= date( 'Y-m-d', strtotime( $_POST[LG_PREFIX .'meeting_date']['date'] ) );
 			}
 	
 			return $slug;
@@ -156,10 +130,66 @@ class Meetings_Module {
 			
 		} );
 		
-		//flush_rewrite_rules();
-		//global $wp_rewrite;
-		//die(var_dump($wp_rewrite));
+	}
+	
+	function cmb2_init() {
+	
+		$meeting_metabox = new_cmb2_box( array(
+			'id' => LG_PREFIX . 'meeting',
+			'title' => __( 'Meeting', 'localgov' ),
+			'object_types' => array( LG_PREFIX . 'meeting' ),
+			'context' => 'normal',
+			'priority' => 'high',
+			'show_names' => true
+		) );
 		
+		$meeting_metabox->add_field( array(
+			'name' => __( 'Date', 'localgov' ),
+			'id' => LG_PREFIX . 'meeting_date',
+			'type' => 'text_datetime_timestamp'
+		) );
+		
+		$meeting_metabox->add_field( array(
+			'name' => __( 'Description', 'localgov' ),
+			'id' => LG_PREFIX . 'meeting_description',
+			'type' => 'text'
+		) );
+		
+		$meeting_metabox->add_field( array(
+			'name' => __( 'Agenda File', 'localgov' ),
+			'id' => LG_PREFIX . 'meeting_agenda_file',
+			'type' => 'file'
+		) );
+		
+		$meeting_metabox->add_field( array(
+			'name' => __( 'Minutes File', 'localgov' ),
+			'id' => LG_PREFIX . 'meeting_minutes_file',
+			'type' => 'file'
+		) );
+		
+		$files_group_id = $meeting_metabox->add_field( array(
+			'name' => __( 'Files', 'localgov' ),
+			'id' => LG_PREFIX . 'meeting_files',
+			'type' => 'group',
+			'options' => array(
+				'group_title' => __( 'Meeting File {#}', 'localgov' ),
+				'add_button' => __( 'Add Another Meeting File', 'localgov' ),
+				'remove_button' => __( 'Remove Meeting File', 'localgov' ),
+				'sortable' => true
+			)
+		) );
+		
+		$meeting_metabox->add_group_field( $files_group_id, array(
+			'name' => 'Title',
+			'id' => 'title',
+			'type' => 'text'
+		) );
+		
+		$meeting_metabox->add_group_field( $files_group_id, array(
+			'name' => 'File',
+			'id' => 'file',
+			'type' => 'file'
+		) );
 	}
 
 	public function pre_get_posts($query) {

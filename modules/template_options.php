@@ -1,6 +1,12 @@
 <?php
 
-namespace localgov;
+namespace { // global code
+	function lg_show_on_page_only( $field ) {
+		return 'page' == get_post_type();
+	}
+}
+
+namespace localgov {
 
 class TemplateOptions_Module {
 	
@@ -22,73 +28,71 @@ class TemplateOptions_Module {
 	}
 
 	public function setup() {
-		add_action( 'init', array( __CLASS__, 'init' ), 30 );
+		add_action( 'cmb2_init', array( __CLASS__, 'cmb2_init' ) );
 	}
-
-	public static function init() {
-				
-		// Add meta box with options to override title and excerpt
-		$page_template_options_fields = new \Fieldmanager_Group( array(
-			'name' => LG_PREFIX . 'template_options',
-			'children' => array(
-				'page_header' => new \Fieldmanager_Select( __('Page header'), array(
-					'options' => array(
-						'show' => 'Show',
-						'hide' => 'Hide'
-					),
-					'default_value' => 'show'
-				) ),
-				'page_width' => new \Fieldmanager_Select( __('Page Width'), array(
-					'options' => array(
-						'full' => 'Full',
-						'fixed' => 'Fixed'
-					),
-					'default_value' => 'fixed'
-				) ),
-				'sidebar' => new \Fieldmanager_Select( __('Sidebar'), array(
-					'display_if' => array(
-						'src' => 'page_width',
-						'value' => 'fixed'
-					),
-					'options' => array(
-						'none' => 'None',
-						'left' => 'Left',
-						'right' => 'Right'
-					),
-					'default_value' => 'right'
-				) ),
-				'featured_image' => new \Fieldmanager_Select( __('Featured Image'), array(
-					'display_if' => array(
-						'src' => 'page_width',
-						'value' => 'fixed'
-					),
-					'options' => array(
-						'show' => 'Show',
-						'hide' => 'Hide',
-					),
-					'default_value' => 'show'
-				) )
+	
+	public function cmb2_init() {
+		
+		$template_metabox = new_cmb2_box( array(
+			'id' => LG_PREFIX . 'template_options',
+			'title' => __( 'Template Options', 'localgov' ),
+			'object_types' => array( 'page', 'post' ),
+			'context' => 'side', 
+			'priority' => 'low',
+			'show_names' => true
+		) );
+		
+		$template_metabox->add_field( array(
+			'name' => __( 'Page Header', 'localgov' ),
+			'id' => LG_PREFIX . 'template_page_header',
+			'type' => 'select',
+			'default' => 'show', 
+			'options' => array(
+				'show' => __( 'Show', 'localgov' ),
+				'hide' => __('Hide', 'localgov' )
+			),
+			'show_on_cb' => 'lg_show_on_page_only'
+		) );
+		
+		$template_metabox->add_field( array(
+			'name' => __( 'Page Width', 'localgov' ),
+			'id' => LG_PREFIX . 'template_page_width',
+			'type' => 'select',
+			'default' => 'fixed', 
+			'options' => array(
+				'full' => __( 'Full', 'localgov' ),
+				'fixed' => __( 'Fixed', 'localgov' )
+			),
+			'show_on_cb' => 'lg_show_on_page_only'
+		) );
+		
+		$template_metabox->add_field( array(
+			'name' => __( 'Sidebar (Fixed Width Only)', 'localgov' ),
+			'id' => LG_PREFIX . 'template_sidebar',
+			'type' => 'select',
+			'default' => 'show', 
+			'options' => array(
+				'show' => __( 'Show', 'localgov' ),
+				'hide' => __('Hide', 'localgov' )
+			),
+			'show_on_cb' => 'lg_show_on_page_only'
+		) );
+		
+		$template_metabox->add_field( array(
+			'name' => __( 'Featured Image', 'localgov' ),
+			'id' => LG_PREFIX . 'template_featured_image',
+			'type' => 'select',
+			'default' => 'show', 
+			'options' => array(
+				'show' => __( 'Show', 'localgov' ),
+				'hide' => __('Hide', 'localgov' )
 			)
 		) );
 		
-		$page_template_options_fields->add_meta_box( 'Template Options', 'page', 'side' );
-		
-		// Posts don't have same template options as pages
-		$post_template_options_fields = new \Fieldmanager_Group( array(
-			'name' => LG_PREFIX . 'template_options',
-			'children' => array(
-				'featured_image' => new \Fieldmanager_Select( __('Featured Image'), array(
-					'options' => array(
-						'show' => 'Show',
-						'hide' => 'Hide',
-					),
-					'default_value' => 'show'
-				) )
-			)
-		) );
-		
-		$post_template_options_fields->add_meta_box( 'Template Options', 'post', 'side' );
 	}
+	
 }
 
 TemplateOptions_Module::instance();
+
+}

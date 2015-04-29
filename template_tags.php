@@ -156,6 +156,7 @@ function lg_get_archives( $args ) {
 		'limit' => '',
 		'order_by' => 'post_date DESC',
 		'date_key' => '',	// for grouping by date field other than post_date
+		'date_type' => 'datetime', // values: date, datetime, timestamp, future: custom
 		'group_posts' => '', // only applies to archives of type 'postbypost', values: year, academicyear, custom field name
 		'group_order' => '',
 		'postmeta_keys' => array(),
@@ -203,6 +204,13 @@ function lg_get_archives( $args ) {
 		if( !in_array( $args['date_key'], $postmeta_keys ) ) {
 			$postmeta_keys[] = $args['date_key'];
 		}
+		
+		$i = array_search($args['date_key'], $postmeta_keys);
+		$date_col = "postmeta_$i.meta_value";
+		
+		if( 'timestamp' == $args['date_type'] ) {
+			$date_col = 'FROM_UNIXTIME(' . $date_col . ')';
+		}
 	}
 
 	if( !empty( $postmeta_keys ) ) {
@@ -211,10 +219,6 @@ function lg_get_archives( $args ) {
 			
 			$join .= " LEFT JOIN $wpdb->postmeta AS `postmeta_$i` ON ($wpdb->posts.ID = postmeta_$i.post_id AND postmeta_$i.meta_key = '$key')";
 			$postmeta_fields .= ", postmeta_$i.meta_value as $key";
-			
-			if( !empty( $args['date_key']) && $key == $args['date_key'] ) {
-				$date_col = "postmeta_$i.meta_value";
-			}
 		}
 	}
 	
@@ -242,12 +246,29 @@ function lg_get_archives( $args ) {
 		$group_posts = $args['group_posts'];
 		$group_order = strtoupper( $args['group_order'] );
 		
-		$group_interval_col = '';
-		if( 'academicyear' == $group_posts ) {
-			$group_interval_col = ", CONCAT( YEAR($date_col-INTERVAL 7 MONTH), '-', 1+YEAR($date_col-INTERVAL 7 MONTH)) AS `group_interval`";
+		$group_col = '';
+		$group_order_by = '';
+		
+		if( !empty( $group_posts) ) {
+		
+			switch( $group_posts ) {
+			
+				case 'year':
+					$group_col = ", YEAR($date_col) AS `group_col`";
+					break;
+					
+				case 'academicyear':
+					$group_col = ", CONCAT( YEAR($date_col-INTERVAL 7 MONTH), '-', 1+YEAR($date_col-INTERVAL 7 MONTH)) AS `group_col`";
+					break;
+				
+				default:
+					$group_col = ", $group_posts AS `group_col`";
+			}
+			
+			$group_order_by = "`group_col` $group_order,";
 		}
 		
-		$query = "SELECT *, $date_col AS `date_col` $group_interval_col $postmeta_fields FROM $wpdb->posts $join $where ORDER BY $order_by $limit";
+		$query = "SELECT *, $date_col AS `date_col` $group_col $postmeta_fields FROM $wpdb->posts $join $where ORDER BY  $group_order_by $order_by $limit";
 		
 		$posts = $wpdb->get_results( $query );
 		
@@ -259,26 +280,12 @@ function lg_get_archives( $args ) {
 			
 			foreach( $posts as $post ) {
 			
-				$key = '';
-				if( 'year' == $args['group_posts'] ) {
-					$key = date('Y', strtotime( $post->date_col ) );
-				}
-				else if( 'academicyear' == $args['group_posts'] ) {
-					$key = $post->group_interval;
-				}
-				else if( isset($post->$group_posts) ) {
-					$key = $post->$group_posts;
+				$key = 'all';
+				if( !empty( $post->group_col ) ) {
+					$key = $post->group_col;
 				}
 				
 				$grouped_results[$key][] = $post;
-			}
-			
-			// Change order of grouped results
-			if( $group_order == 'ASC' ) {
-				ksort( $grouped_results );
-			}
-			else if( $group_order == 'DESC' ) {
-				krsort( $grouped_results );	
 			}
 		}
 		
@@ -286,89 +293,4 @@ function lg_get_archives( $args ) {
 		include $args['template'];
 		return ob_get_clean();
 	}
-}
-
-
-function lg_get_directory( $args ) {
-	
-	$defaults = array(
-		'type' => 'postbypost',
-		'post_type' => LG_PREFIX . 'directory_member',
-		'order_by' => LG_PREFIX . 'directory_member_last_name ASC, '. LG_PREFIX . 'directory_member_first_name ASC',
-		'postmeta_keys' => array(LG_PREFIX . 'directory_member_last_name', LG_PREFIX . 'directory_member_first_name', LG_PREFIX . 'directory_member_group'),
-		'group_posts' => LG_PREFIX . 'directory_member_group',
-		'group_order' => 'ASC',
-		'template' => LG_BASE_DIR . '/templates/directory.php',
-		'template_options' => array(
-			'fields' => '',
-			'show_headers' => true
-		)
-	);
-	
-	/**
-	 * Filter the default args
-	 * 
-	 * @param array  $defaults
-	 * @param array  $args
-	 */
-	$defaults = apply_filters( 'lg_get_directory_default_args', $defaults , $args );
-	
-	$args = wp_parse_args( $args, $defaults );
-	
-	/**
-	 * Filter the args
-	 * 
-	 * @param array  $args
-	 */
-	$args = apply_filters( 'lg_get_directory_args', $args );
-	
-	return lg_get_archives( $args );
-}
-
-function lg_get_featured_posts( $options ) {
-
-	$featured_posts = localgov\FeaturedContent_Module::get_featured_posts( $options );
-
-	return apply_filters( 'lg_featured_posts', $featured_posts );
-}
-
-
-$lg_featured_id = 0;
-
-function lg_get_featured( $args = array() ) {
-		
-	global $lg_featured_id;
-	$lg_featured_id++;
-	
-	$defaults = array (
-		'template' => LG_BASE_DIR . '/templates/featured_content_slider.php',
-		'category_name' => ''
-	);
-	
-	/**
-	 * Filter the default args
-	 * 
-	 * @param array  $defaults
-	 * @param array  $args
-	 */
-	$defaults = apply_filters( 'lg_get_featured_default_args', $defaults , $args );
-	
-	$args = wp_parse_args( $args, $defaults );
-	
-	/**
-	 * Filter the args
-	 * 
-	 * @param array  $args
-	 */
-	$args = apply_filters( 'lg_get_featured_args', $args );
-	
-	$options = array( 
-		'category_name' => $args['category_name']
-	);
-	
-	$featured_posts = lg_get_featured_posts( $options );
-	
-	ob_start();
-	include $args['template'];
-	return ob_get_clean();
 }

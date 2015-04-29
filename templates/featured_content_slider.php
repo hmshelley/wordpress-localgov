@@ -17,21 +17,20 @@
 		<div class="row lg-slide lg-slide-<?php echo $i ?> item<?php echo ($i == 0) ? ' active' : '' ?>">
 				<div class="col-md-4 lg-slide-col-content">
 					<div class="lg-slide-content">
+	
 						<?php
 						
-							$title = get_the_title();
-															
-							$featured_content = get_post_meta( $post->ID, LG_PREFIX . 'featured_content' );
+							$title = get_post_meta( $post->ID, LG_PREFIX . 'featured_title', true );
+							$title = ( $title ) ? $title : get_the_title();
 							
-							if( !empty ( $featured_content[0]['title'] ) ) {
-								$title = $featured_content[0]['title'];
-							}
+							$more_link = get_post_meta( $post->ID, LG_PREFIX . 'featured_more_link', true );
+							$more_link = ( $more_link ) ? $more_link : 'show';
 						?>
 						
 						<h2><?php echo $title; ?></h2>
 						<p><?php echo wpautop( get_the_excerpt() ); ?></p>
 						
-						<?php if( !isset( $featured_content[0]['show_more_link'] ) || $featured_content[0]['show_more_link'] ): ?>
+						<?php if( 'show' == $more_link ): ?>
 							<p><a href="<?php echo get_the_permalink(); ?>" class="btn btn-primary"><span class="glyphicon-chevron-right"></span> Read More</a></p>
 						<?php endif; ?>
 						

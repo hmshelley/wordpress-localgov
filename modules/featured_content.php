@@ -1,6 +1,58 @@
 <?php
 
-namespace localgov;
+namespace {
+
+function lg_get_featured_posts( $options ) {
+
+	$featured_posts = localgov\FeaturedContent_Module::get_featured_posts( $options );
+
+	return apply_filters( 'lg_featured_posts', $featured_posts );
+}
+
+
+$lg_featured_id = 0;
+
+function lg_get_featured( $args = array() ) {
+		
+	global $lg_featured_id;
+	$lg_featured_id++;
+	
+	$defaults = array (
+		'template' => LG_BASE_DIR . '/templates/featured_content_slider.php',
+		'category_name' => ''
+	);
+	
+	/**
+	 * Filter the default args
+	 * 
+	 * @param array  $defaults
+	 * @param array  $args
+	 */
+	$defaults = apply_filters( 'lg_get_featured_default_args', $defaults , $args );
+	
+	$args = wp_parse_args( $args, $defaults );
+	
+	/**
+	 * Filter the args
+	 * 
+	 * @param array  $args
+	 */
+	$args = apply_filters( 'lg_get_featured_args', $args );
+	
+	$options = array( 
+		'category_name' => $args['category_name']
+	);
+	
+	$featured_posts = lg_get_featured_posts( $options );
+	
+	ob_start();
+	include $args['template'];
+	return ob_get_clean();
+}
+
+}
+
+namespace localgov {
 
 class FeaturedContent_Module {
 	
@@ -28,6 +80,8 @@ class FeaturedContent_Module {
 	public function setup() {
 		add_action( 'after_setup_theme', array( __CLASS__, 'after_setup_theme' ) );
 		add_action( 'init', array( __CLASS__, 'init' ), 30 );
+		add_action( 'cmb2_init', array( __CLASS__, 'cmb2_init' ) );
+		add_action( 'pre_get_posts', array( __CLASS__, 'pre_get_posts' ) );
 	}
 	
 	public static function after_setup_theme() {
@@ -38,40 +92,57 @@ class FeaturedContent_Module {
 	}
 	
 	public static function init() {
-
-		add_action( 'pre_get_posts', array( __CLASS__, 'pre_get_posts' ) );
-		
-		add_post_type_support( 'page', 'excerpt' );
 		
 		register_taxonomy_for_object_type( 'category', 'page' );
 		
-		// Add meta box with options to override title and excerpt
-		$featured_content_fields = new \Fieldmanager_Group( array(
-			'name' => LG_PREFIX . 'featured_content',
-			'children' => array(
-				'featured' => new \Fieldmanager_Checkbox( __('Featured in content slider on front page'), array(
-					'index' => LG_PREFIX . 'featured'
-				) ),
-				'featured_categories' => new \Fieldmanager_Checkbox( __('Featured in content sliders for  categories'), array(
-					'index' => LG_PREFIX . 'featured_categories'
-				) ),
-				'exclude' => new \Fieldmanager_Checkbox( __('Exclude from front page'), array(
-					'index' => LG_PREFIX . 'featured_exclude'
-				) ),
-				'title' => new \Fieldmanager_Textfield( __('Featured Title (Post/Page title is used if not specified)'), array(
-					'index' => LG_PREFIX . 'featured_title'
-				) ),
-				'more_link' => new \Fieldmanager_Select( __('"Read More" link'), array(
-					'options' => array(
-						'show' => 'Show',
-						'hide' => 'Hide'
-					),
-					'default_value' => 'show'
-				) )
+	}
+	
+	public function cmb2_init() {
+	
+		$featured_metabox = new_cmb2_box( array(
+			'id' => LG_PREFIX . 'featured',
+			'title' => __( 'Featured Posts/Pages', 'localgov' ),
+			'object_types' => self::$post_types,
+			'context' => 'normal', 
+			'priority' => 'low',
+			'show_names' => true
+		) );
+		
+		$featured_metabox->add_field( array(
+			'name' => __( 'Featured in content slider on front page' ),
+			'id' => LG_PREFIX . 'featured',
+			'type' => 'checkbox'
+		) );
+		
+		$featured_metabox->add_field( array(
+			'name' => __( 'Featured in content sliders for categories' ),
+			'id' => LG_PREFIX . 'featured_categories',
+			'type' => 'checkbox'
+		) );
+		
+		$featured_metabox->add_field( array(
+			'name' => __( 'Exclude from front page' ),
+			'id' => LG_PREFIX . 'featured_exclude',
+			'type' => 'checkbox'
+		) );
+		
+		$featured_metabox->add_field( array(
+			'name' => __( 'Featured Title (Post/Page title is used if not specified)' ),
+			'id' => LG_PREFIX . 'featured_title',
+			'type' => 'text'
+		) );
+		
+		$featured_metabox->add_field( array(
+			'name' =>  __('"Read More" link'),
+			'id' => LG_PREFIX . 'featured_more_link',
+			'type' => 'select',
+			'default' => 'show', 
+			'options' => array(
+				'show' => __( 'Show', 'localgov' ),
+				'hide' => __('Hide', 'localgov' )
 			)
 		) );
 		
-		$featured_content_fields->add_meta_box( 'Featured Content', self::$post_types );
 	}
 
 	public static function get_featured_posts( $options = array() ) {
@@ -157,3 +228,5 @@ class FeaturedContent_Module {
 }
 
 FeaturedContent_Module::instance();
+
+}

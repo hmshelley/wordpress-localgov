@@ -24,6 +24,7 @@ class Newsletters_Module {
 	public function setup() {
 	
 		add_action( 'init', array( $this, 'init' ) );
+		add_action( 'cmb2_init', array( $this, 'cmb2_init' ) );
 		add_action( 'wp', array( $this, 'wp' ) );
 		
 		add_filter( 'lg_get_archives_default_args', array( $this, 'filter_get_archives_default_args' ), 10, 2 );
@@ -41,6 +42,7 @@ class Newsletters_Module {
 		
 		$defaults['order_by'] = 'lg_newsletter_date DESC, post_title DESC';
 		$defaults['date_key'] = 'lg_newsletter_date';
+		$defaults['date_type'] = 'timestamp'; 
 		
 		return $defaults;
 	}
@@ -68,39 +70,65 @@ class Newsletters_Module {
 			),
 			'public' => true,
 			'has_archive' => true,
-			'hierarchical' => false,
-			'rewrite' => array('slug' => 'newsletters'),
-			'supports' => array('title')
+			'rewrite' => array(
+				'slug' => 'newsletters'
+			),
+			'supports' => array( 'title' )
 		));
+		
 	}
 
 	function init() {
-	
 		self::register_types();
+	}
+	
+	function cmb2_init() {
 		
-		localgov_load_class( 'FM_Month_Year' );
+		$newsletter_metabox = new_cmb2_box( array(
+			'id' => LG_PREFIX . 'newsletter',
+			'title' => __( 'Newsletter', 'localgov' ),
+			'object_types' => array( LG_PREFIX . 'newsletter' ),
+			'context' => 'normal',
+			'priority' => 'high',
+			'show_names' => true
+		) );
 		
-		$fm = new \Fieldmanager_Group( array(
-			'name' => LG_PREFIX . 'newsletter',
-			'children' => array(
-				'date' => new \FM_Month_Year('Newsletter Date', array(
-					'index' => LG_PREFIX . 'newsletter_date'
-				)),
-				'newsletter_file' => new \Fieldmanager_Media('Newsletter File'),
-				'files' => new \Fieldmanager_Group( array(
-					'limit' => 0,
-					'label' => 'Related File',
-					'label_macro' => array( 'File: %s', 'title' ),
-					'add_more_label' => 'Add Another File',
-					'children' => array(
-						'title' => new \Fieldmanager_Textfield( 'Title' ),
-						'file' => new \Fieldmanager_Media( 'File' )
-					)
-				) )
+		$newsletter_metabox->add_field( array(
+			'name' => __( 'Newsletter Date', 'localgov' ),
+			'id' => LG_PREFIX . 'newsletter_date',
+			'type' => 'text_date_timestamp'
+		) );
+		
+		$newsletter_metabox->add_field( array(
+			'name' => __( 'Newsletter File', 'localgov' ),
+			'id' => LG_PREFIX . 'newsletter_file',
+			'type' => 'file'
+		) );
+		
+		$files_group_id = $newsletter_metabox->add_field( array(
+			'name' => __( 'Files', 'localgov' ),
+			'id' => LG_PREFIX . 'newsletter_files',
+			'type' => 'group',
+			'options' => array(
+				'group_title' => __( 'Related File {#}', 'localgov' ),
+				'add_button' => __( 'Add Another File', 'localgov' ),
+				'remove_button' => __( 'Remove File', 'localgov' ),
+				'sortable' => true
 			)
-		));
+		) );
 		
-		$fm->add_meta_box('Newsletter', array( LG_PREFIX . 'newsletter') );
+		$newsletter_metabox->add_group_field( $files_group_id, array(
+			'name' => 'Title',
+			'id' => 'title',
+			'type' => 'text'
+		) );
+		
+		$newsletter_metabox->add_group_field( $files_group_id, array(
+			'name' => 'File',
+			'id' => 'file',
+			'type' => 'file'
+		) );
+		
 	}
 	
 	function wp( $wp ) {

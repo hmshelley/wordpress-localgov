@@ -140,17 +140,15 @@ class Newsletters_Module {
 			return;
 		}
 		
-		$newsletter = get_post_meta( get_the_ID(), LG_PREFIX . 'newsletter');
+		$newsletter_file = get_post_meta( get_the_ID(), LG_PREFIX . 'newsletter_file', true);
 		
-		if( empty( $newsletter[0]['newsletter_file'] ) ) {
+		if( empty( $newsletter_file ) ) {
 			status_header(404);
 			include( get_404_template() );
 			exit;
 		}
 		
-		$url = wp_get_attachment_url( $newsletter[0]['newsletter_file'] );
-		
-		header( "Location: $url" );
+		header( "Location: $newsletter_file" );
 		exit;
 	}	
 }

@@ -110,26 +110,6 @@ class Meetings_Module {
 			return $slug;
 		}, 10, 6 );
 		
-		// Add meeting date to title
-		add_filter( 'the_title', function( $title ) {
-			
-			if( 
-				!in_the_loop()
-				|| get_post_type() != LG_PREFIX . 'meeting'
-			) {
-				return $title;
-			}
-			
-			$meeting_date = get_post_meta( get_the_ID(), LG_PREFIX . 'meeting_date' );
-			
-			if( !empty( $meeting_date[0] ) ) {
-				$title .= ' - ' . date( get_option( 'date_format'), $meeting_date[0] ); 
-			}
-			
-			return $title;
-			
-		} );
-		
 	}
 	
 	function cmb2_init() {

@@ -209,6 +209,10 @@ function lg_get_archives( $args ) {
 		$date_col = "postmeta_$i.meta_value";
 		
 		if( 'timestamp' == $args['date_type'] ) {
+		
+			// Prevent timestamps from being converted to server timezone
+			$wpdb->query("SET time_zone = '+00:00'");
+			
 			$date_col = 'FROM_UNIXTIME(' . $date_col . ')';
 		}
 	}

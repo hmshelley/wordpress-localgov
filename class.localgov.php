@@ -11,6 +11,7 @@ class Localgov {
 		'featured',
 		'meetings',
 		'newsletters',
+		'public_notices',
 		'submenus',
 		'template_options'
 	);

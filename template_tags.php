@@ -146,30 +146,26 @@ function lg_get_breadcrumbs() {
 
 function lg_get_archives( $args ) {
 	
-	global $wpdb, $wp_locale;
+	global $wpdb;
 	
 	$defaults = array (
-		'type' => 'yearly', // values: yearly, postbypost, future: monthly, daily, weekly
+		'type' => 'postbypost', // values: postbypost, future: yearly, monthly, daily, weekly
 		'post_type' => 'post',
-		'format' => 'list', // values: list, feed, future: table, grid, gallery
-		'content_format' => 'link', // values: link, teaser, full
-		'limit' => '',
-		'order_by' => 'post_date DESC',
-		'date_key' => '',	// for grouping by date field other than post_date
+		'format' => 'feed', // values: list, feed, future: table, grid, gallery
+		'content_format' => 'teaser', // values: link, teaser, full
+		'date_key' => 'post_date',	// for grouping by date field other than post_date
 		'date_type' => 'datetime', // values: date, datetime, timestamp, future: custom
-		'group_posts' => '', // only applies to archives of type 'postbypost', values: year, academicyear, custom field name
-		'group_order' => '',
-		'postmeta_keys' => array(),
-		'template' => LG_BASE_DIR . '/templates/archive.php',
+		'meta_query' => array(),
+		'order_by' => 'post_date',
+		'order' => 'DESC',
+		'posts_per_page' => get_option( 'posts_per_page' ),
+		'post_group_by' => '', // only applies to archives of type 'postbypost', values: year, custom field name, future: taxonomy
+		'post_group_order' => '',
+		'post_group_offset' => '', // e.g. "8 MONTH" to display posts grouped by academic year
+		'template' => LG_BASE_DIR . '/templates/archives.php',
 		'template_options' => array(),
 		'paging' => true
 	);
-	
-	// Change format defaults if postbypost
-	if( 'postbypost' == $args['type'] ) {
-		$defaults['format'] = 'feed';
-		$defaults['content_format'] = 'teaser';
-	}
 	
 	/**
 	 * Filter the default args
@@ -187,111 +183,125 @@ function lg_get_archives( $args ) {
 	 * @param array  $args
 	 */
 	$args = apply_filters( 'lg_get_archives_args', $args );
-
-	$join = "";
 	
-	$where = "WHERE post_type = '$args[post_type]' AND post_status = 'publish'";
-
-	$order_by = $args['order_by'];
+	$WP_Query = new WP_Query;
+	$WP_Query->lg_is_archives = true;
 	
-	$postmeta_keys = $args['postmeta_keys'];
-	$postmeta_fields = '';
-
-	$date_col = 'post_date';
+	$query_args = array(
+		'post_type' => $args['post_type'],
+		'post_status' => 'publish',
+		'posts_per_page' => $args['posts_per_page'],
+		'meta_query' => $args['meta_query'],
+		'orderby' => $args['order_by']
+	);
 	
-	if( !empty( $args['date_key'] ) ) {
+	if( !is_array( $args['order_by'] ) ) {
+		$query_args['order'] = $args['order'];
+	}
 
-		if( !in_array( $args['date_key'], $postmeta_keys ) ) {
-			$postmeta_keys[] = $args['date_key'];
-		}
+	// Use a date other than post_date to group posts
+	$date_field = 'post_date';
+	
+	if( !empty( $args['date_key'] ) && 'post_date' != $args['date_key'] ) {
 		
-		$i = array_search($args['date_key'], $postmeta_keys);
-		$date_col = "postmeta_$i.meta_value";
+		$query_args['meta_key'] = $args['date_key'];
+		$date_field = "$wpdb->postmeta.meta_value";
 		
 		if( 'timestamp' == $args['date_type'] ) {
 		
 			// Prevent timestamps from being converted to server timezone
 			$wpdb->query("SET time_zone = '+00:00'");
 			
-			$date_col = 'FROM_UNIXTIME(' . $date_col . ')';
-		}
-	}
-
-	if( !empty( $postmeta_keys ) ) {
-		
-		foreach( $postmeta_keys as $i => $key ) {
-			
-			$join .= " LEFT JOIN $wpdb->postmeta AS `postmeta_$i` ON ($wpdb->posts.ID = postmeta_$i.post_id AND postmeta_$i.meta_key = '$key')";
-			$postmeta_fields .= ", postmeta_$i.meta_value as $key";
+			$date_field = 'FROM_UNIXTIME(' . $date_field . ')';
 		}
 	}
 	
-	$limit = '';
-	if ( !empty( $args['limit'] ) ) {
-		$limit = ' LIMIT ' . absint( $args['limit'] );
-	}
-
+	$WP_Query->lg_date_field = $date_field;
+	
+	
 	if ( 'yearly' == $args['type'] ) {
-		$query = "SELECT *, $date_col AS `date_col`, YEAR($date_col) AS `year` $postmeta_fields FROM $wpdb->posts $join $where GROUP BY YEAR($date_col) ORDER BY $order_by $limit";
 		
-		$results = $wpdb->get_results( $query );
-		
-		$output = '';
-		if ( $results ) {
-			foreach ( (array) $results as $result) {
-				$url = get_year_link( $result->year );
-				$text = sprintf( '%d', $result->year );
-				$output .= get_archives_link( $url, $text );
-			}
-		}
+		// TODO: Implement yearly archives
 		
 	} elseif ( 'postbypost' == $args['type'] ) {
 		
-		$group_posts = $args['group_posts'];
-		$group_order = strtoupper( $args['group_order'] );
+		// Set params on WP_Query object so they are available in filters
+		$WP_Query->lg_post_group_by = $args['post_group_by'];
+		$WP_Query->lg_post_group_offset = $args['post_group_offset'];
+		$WP_Query->lg_post_group_order = $args['post_group_order'];
 		
-		$group_col = '';
-		$group_order_by = '';
-		
-		if( !empty( $group_posts) ) {
-		
-			switch( $group_posts ) {
+		add_filter( 'posts_fields', function( $fields, $WP_Query ) {
+			
+			if( empty( $WP_Query->lg_post_group_by ) ) {
+				return $fields;
+			}
+			
+			switch( $WP_Query->lg_post_group_by ) {
 			
 				case 'year':
-					$group_col = ", YEAR($date_col) AS `group_col`";
-					break;
+					$lg_archives_group = ", YEAR($WP_Query->lg_date_field) AS `lg_archives_group`";
 					
-				case 'academicyear':
-					$group_col = ", CONCAT( YEAR($date_col-INTERVAL 7 MONTH), '-', 1+YEAR($date_col-INTERVAL 7 MONTH)) AS `group_col`";
+					if( !empty( $WP_Query->lg_post_group_offset ) ) {
+						$lg_archives_group = ", CONCAT( YEAR($WP_Query->lg_date_field-INTERVAL $WP_Query->lg_post_group_offset), '-', 1+YEAR($WP_Query->lg_date_field-INTERVAL $WP_Query->lg_post_group_offset)) AS `lg_archives_group`";
+					}
+					
 					break;
 				
 				default:
-					$group_col = ", $group_posts AS `group_col`";
+					$lg_archives_group = ", $WP_Query->lg_post_group_by AS `lg_archives_group`";
 			}
 			
-			$group_order_by = "`group_col` $group_order,";
-		}
+			$fields .= $lg_archives_group;
+			
+			return $fields;
+			
+		}, 10, 2 );
 		
-		$query = "SELECT *, $date_col AS `date_col` $group_col $postmeta_fields FROM $wpdb->posts $join $where ORDER BY  $group_order_by $order_by $limit";
 		
-		$posts = $wpdb->get_results( $query );
+		add_filter( 'posts_orderby', function( $orderby, $WP_Query ) {
+			
+			if( empty( $WP_Query->lg_post_group_by ) ) {
+				return $orderby;
+			}
+			
+			$post_group_order = 'ASC';
+			if( 'DESC' == strtoupper( $WP_Query->lg_post_group_order ) ) {
+				$post_group_order = 'DESC';
+			}
+			
+			$new_orderby = "lg_archives_group $post_group_order";
+			
+			if( !empty( $orderby ) ) {
+				$new_orderby .= ', ' . $orderby;
+			}
+			
+			return $new_orderby;
+			
+		}, 10, 2 );
+		
+		
+		$posts = $WP_Query->query( $query_args );
+		//echo $WP_Query->request;
 		
 		$grouped_results = array( $posts );
 		
-		if( !empty( $args['group_posts'] ) ) {
+		if( !empty( $args['post_group_by'] ) ) {
 			
 			$grouped_results = array();
 			
 			foreach( $posts as $post ) {
 			
 				$key = 'all';
-				if( !empty( $post->group_col ) ) {
-					$key = $post->group_col;
+				if( !empty( $post->lg_archives_group ) ) {
+					$key = $post->lg_archives_group;
 				}
 				
 				$grouped_results[$key][] = $post;
 			}
 		}
+		
+		// Set vars for template
+		$post_group_by = $args['post_group_by'];
 		
 		ob_start();
 		include $args['template'];

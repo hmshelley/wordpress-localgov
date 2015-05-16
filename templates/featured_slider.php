@@ -23,12 +23,15 @@
 							$title = get_post_meta( $post->ID, LG_PREFIX . 'featured_title', true );
 							$title = ( $title ) ? $title : get_the_title();
 							
+							$excerpt = get_post_meta( $post->ID, LG_PREFIX . 'featured_excerpt', true );
+							$excerpt = ( $excerpt ) ? $excerpt : get_the_excerpt();
+							
 							$more_link = get_post_meta( $post->ID, LG_PREFIX . 'featured_more_link', true );
 							$more_link = ( $more_link ) ? $more_link : 'show';
 						?>
 						
 						<h2><?php echo $title; ?></h2>
-						<p><?php echo wpautop( get_the_excerpt() ); ?></p>
+						<p><?php echo wpautop( $excerpt ); ?></p>
 						
 						<?php if( 'show' == $more_link ): ?>
 							<p><a href="<?php echo get_the_permalink(); ?>" class="btn btn-primary"><span class="glyphicon-chevron-right"></span> Read More</a></p>
@@ -50,8 +53,8 @@
 							echo '<div class="lg-slide-bg-image" style="background-image: url('.$thumbnail_url.')"></div>';
 							
 							$attachment = get_post( $thumbnail_id ); 
-							if( !empty( $attachment->post_content ) ) {
-								echo '<cite>' . $attachment->post_content . '</cite>';
+							if( !empty( $attachment->post_excerpt ) ) {
+								echo '<span class="caption">' . $attachment->post_excerpt . '</span>';
 							}
 						}
 					?>

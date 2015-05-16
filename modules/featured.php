@@ -63,7 +63,7 @@ class Featured_Module {
 	
 	public static $max_posts = 15;
 	
-	public static $post_types = array( 'post', 'page', 'lg_directory_member' );	
+	public static $post_types = array( 'post', 'page', 'lg_directory_member', 'tribe_events' );	
 
 	private function __construct() {
 		/* Don't do anything, needs to be initialized via instance() method */
@@ -86,14 +86,17 @@ class Featured_Module {
 	
 	public static function after_setup_theme() {
 		add_post_type_support( 'post', 'excerpt' );
-		add_post_type_support( 'page', 'excerpt' );
 	
 		add_theme_support( 'post-thumbnails' );
 	}
 	
 	public static function init() {
 		
-		register_taxonomy_for_object_type( 'category', 'page' );
+		register_taxonomy( LG_PREFIX . 'featured_category', self::$post_types, array(
+			'label' => __( 'Featured Categories' ),
+			'hierarchical' => true,
+			'show_admin_column' => true
+		) );
 		
 	}
 	
@@ -101,7 +104,7 @@ class Featured_Module {
 	
 		$featured_metabox = new_cmb2_box( array(
 			'id' => LG_PREFIX . 'featured',
-			'title' => __( 'Featured Posts/Pages', 'localgov' ),
+			'title' => __( 'Featured Content', 'localgov' ),
 			'object_types' => self::$post_types,
 			'context' => 'normal', 
 			'priority' => 'low',
@@ -109,27 +112,25 @@ class Featured_Module {
 		) );
 		
 		$featured_metabox->add_field( array(
-			'name' => __( 'Featured in content slider on front page' ),
-			'id' => LG_PREFIX . 'featured',
-			'type' => 'checkbox'
-		) );
-		
-		$featured_metabox->add_field( array(
-			'name' => __( 'Featured in content sliders for categories' ),
+			'name' => __( 'Featured on' ),
 			'id' => LG_PREFIX . 'featured_categories',
-			'type' => 'checkbox'
+			'type' => 'taxonomy_multicheck',
+			'taxonomy' => LG_PREFIX . 'featured_category'
 		) );
 		
 		$featured_metabox->add_field( array(
-			'name' => __( 'Exclude from front page' ),
-			'id' => LG_PREFIX . 'featured_exclude',
-			'type' => 'checkbox'
-		) );
-		
-		$featured_metabox->add_field( array(
-			'name' => __( 'Featured Title (Post/Page title is used if not specified)' ),
+			'name' => __( 'Featured Title' ),
 			'id' => LG_PREFIX . 'featured_title',
 			'type' => 'text'
+		) );
+		
+		$featured_metabox->add_field( array(
+			'name' => __( 'Featured Excerpt' ),
+			'id' => LG_PREFIX . 'featured_excerpt',
+			'type' => 'wysiwyg',
+			'options' => array(
+				'textarea_rows' => 5
+			)
 		) );
 		
 		$featured_metabox->add_field( array(
@@ -143,6 +144,12 @@ class Featured_Module {
 			)
 		) );
 		
+		$featured_metabox->add_field( array(
+			'name' => __( 'Exclude from home page news and archives' ),
+			'id' => LG_PREFIX . 'featured_exclude',
+			'type' => 'checkbox'
+		) );
+		
 	}
 
 	public static function get_featured_posts( $options = array() ) {
@@ -150,14 +157,19 @@ class Featured_Module {
 		$args = array(
 			'numberposts' => self::$max_posts,
 			'post_type' => self::$post_types,
-			'meta_key' => LG_PREFIX . 'featured',
-			'meta_value' => true,
-			'orderby' => array( 'menu_order' => 'ASC', 'date' => 'DESC' )
+			'orderby' => array( 'menu_order' => 'ASC', 'date' => 'DESC' ),
+			'tax_query' => array(
+				array(
+					'taxonomy' => LG_PREFIX . 'featured_category',
+					'field' => 'slug',
+					'terms' => 'front-page',
+					'operator' => 'IN'
+				)
+			)
 		);
 		
-		if( !empty( $options['category_name'] ) ) {
-			$args['category_name'] = $options['category_name'];
-			$args['meta_key'] = LG_PREFIX . 'featured_categories';
+		if ( !empty( $options['category_name'] ) ) {
+			$args['tax_query'][0]['terms'] = $options['category_name'];
 		}
 		
 		$sticky_post_ids = get_option('sticky_posts');
@@ -186,14 +198,13 @@ class Featured_Module {
 	 */
 	public static function pre_get_posts( $query ) {
 		
-		// Bail if admin or not main query.
+		// Bail if not archives or home
 		if ( 
-			is_admin()
-			|| !$query->is_main_query()
-			// is_front_page() doesn't work in pre_get_posts yet, so check if home and static front page
-			|| !(
-				$query->is_home()
-				// || $query->get('page_id') == get_option('page_on_front')
+			!isset( $query->lg_is_archives )
+			&& (
+				is_admin()
+				|| !$query->is_main_query()
+				|| !$query->is_home()
 			)
 		) {
 			return;
@@ -203,7 +214,7 @@ class Featured_Module {
 			'numberposts' => self::$max_posts,
 			'post_type' => self::$post_types,
 			'meta_key' => LG_PREFIX . 'featured_exclude',
-			'meta_value' => true
+			'meta_value' => 'on'
 		) );
 		
 		// Bail if nothing to exclude

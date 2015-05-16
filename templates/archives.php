@@ -14,7 +14,7 @@
 
 <?php foreach( $grouped_results as $key => $grouped_result ): ?>
 	
-	<?php if( !empty( $group_posts ) ): ?>
+	<?php if( !empty( $post_group_by ) ): ?>
 	<h3><?php echo $key ?></h3>
 	<?php endif; ?>
 	

@@ -7,10 +7,19 @@ function lg_get_directory( $args ) {
 	$defaults = array(
 		'type' => 'postbypost',
 		'post_type' => LG_PREFIX . 'directory_member',
-		'order_by' => LG_PREFIX . 'directory_member_last_name ASC, '. LG_PREFIX . 'directory_member_first_name ASC',
-		'postmeta_keys' => array(LG_PREFIX . 'directory_member_last_name', LG_PREFIX . 'directory_member_first_name', LG_PREFIX . 'directory_member_group'),
-		'group_posts' => LG_PREFIX . 'directory_member_group',
-		'group_order' => 'ASC',
+		'meta_query' => array(
+			LG_PREFIX . 'directory_member_last_name' => array(
+				'key' => LG_PREFIX . 'directory_member_last_name'
+			),
+			LG_PREFIX . 'directory_member_first_name' => array(
+				'key' => LG_PREFIX . 'directory_member_first_name'
+			)
+		),
+		'order_by' => array(
+			LG_PREFIX . 'directory_member_last_name' => 'ASC',
+			LG_PREFIX . 'directory_member_first_name' => 'ASC'
+		),
+		'posts_per_page' => -1,
 		'template' => LG_BASE_DIR . '/templates/directory.php',
 		'template_options' => array(
 			'fields' => '',

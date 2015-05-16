@@ -76,8 +76,10 @@ class Shortcodes {
 			'contentformat' => 'content_format',
 			'limit' => 'limit',
 			'orderby' => 'order_by',
-			'groupposts' => 'group_posts',
-			'grouporder' => 'group_order',
+			'order' => 'order',
+			'postgroupby' => 'post_group_by',
+			'postgrouporder' => 'post_group_order',
+			'postgroupoffset' => 'post_group_offset',
 			'template' => 'template',
 			'paging' => 'paging'
 		);

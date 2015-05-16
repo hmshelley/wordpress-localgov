@@ -28,36 +28,26 @@ class Newsletters_Module {
 		add_action( 'wp', array( $this, 'wp' ) );
 		
 		add_filter( 'lg_get_archives_default_args', array( $this, 'filter_get_archives_default_args' ), 10, 2 );
-		add_filter( 'lg_get_archives_args', array( $this, 'filter_get_archives_args' ) );
 	}
 	
 	public static function filter_get_archives_default_args( $defaults, $args ) {
 		
 		if(	
 			!isset( $args['post_type'] )
-			|| ( $args['post_type'] != 'newsletter' && $args['post_type'] != 'lg_newsletter' )
+			|| ( $args['post_type'] != 'newsletter' && $args['post_type'] != LG_PREFIX . 'newsletter' )
 		) {
 			return $defaults;
 		}
 		
-		$defaults['order_by'] = 'lg_newsletter_date DESC, post_title DESC';
-		$defaults['date_key'] = 'lg_newsletter_date';
-		$defaults['date_type'] = 'timestamp'; 
+		$defaults['date_key'] = LG_PREFIX . 'newsletter_date';
+		$defaults['date_type'] = 'timestamp';
+		$defaults['order_by'] = array( 
+			LG_PREFIX . 'newsletter_date' => 'DESC', 
+			'post_title' => 'DESC'
+		);
+		$defaults['posts_per_page'] = -1;
 		
 		return $defaults;
-	}
-	
-	public static function filter_get_archives_args( $args ) {
-		
-		if(	
-			!isset( $args['post_type'] )
-			|| ( $args['post_type'] != 'newsletter' && $args['post_type'] != 'lg_newsletter' )
-		) {
-			return $args;
-		}
-		
-		$args['post_type'] = 'lg_newsletter';
-		return $args;
 	}
 
 	public function register_types() {

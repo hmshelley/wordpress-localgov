@@ -28,7 +28,6 @@ class PublicNotices_Module {
 		add_action( 'wp', array( $this, 'wp' ) );
 		
 		add_filter( 'lg_get_archives_default_args', array( $this, 'filter_get_archives_default_args' ), 10, 2 );
-		add_filter( 'lg_get_archives_args', array( $this, 'filter_get_archives_args' ) );
 	}
 	
 	public static function filter_get_archives_default_args( $defaults, $args ) {
@@ -40,29 +39,19 @@ class PublicNotices_Module {
 			return $defaults;
 		}
 		
-		$defaults['order_by'] = 'lg_public_notice_date DESC, post_title DESC';
-		$defaults['date_key'] = 'lg_public_notice_date';
+		$defaults['date_key'] = LG_PREFIX . 'public_notice_date';
 		$defaults['date_type'] = 'timestamp'; 
+		$defaults['order_by'] = array(
+			LG_PREFIX . 'public_notice_date' => 'DESC',
+			'post_title' => 'DESC'
+		);
 		
 		return $defaults;
-	}
-	
-	public static function filter_get_archives_args( $args ) {
-		
-		if(	
-			!isset( $args['post_type'] )
-			|| ( $args['post_type'] != 'public_notice' && $args['post_type'] != 'lg_public_notice' )
-		) {
-			return $args;
-		}
-		
-		$args['post_type'] = 'lg_public_notice';
-		return $args;
 	}
 
 	public function register_types() {
 	
-		register_post_type(LG_PREFIX . 'public_notice', array(
+		register_post_type( LG_PREFIX . 'public_notice', array(
 			'labels' => array(
 				'name' => __('Public Notices'),
 				'singular_name' => __('Public Notice'),
@@ -74,7 +63,7 @@ class PublicNotices_Module {
 				'slug' => 'public-notices'
 			),
 			'supports' => array( 'title' )
-		));
+		) );
 		
 	}
 

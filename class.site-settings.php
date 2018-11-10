@@ -134,13 +134,7 @@ class SiteSettings {
 			'id' => 'logo',
 			'type' => 'file',
 		) );
-		
-		$general_metabox->add_field( array(
-			'name' => __( 'Favicon', 'localgov' ),
-			'id' => 'favicon',
-			'type' => 'file',
-		) );
-		
+
 		$general_metabox->add_field( array(
 			'name' => __( 'Copyright Text', 'localgov' ),
 			'id' => 'copyright_text',

@@ -45,6 +45,7 @@ class PublicNotices_Module {
 			LG_PREFIX . 'public_notice_date' => 'DESC',
 			'post_title' => 'DESC'
 		);
+		$defaults['posts_per_page'] = -1;
 		
 		return $defaults;
 	}

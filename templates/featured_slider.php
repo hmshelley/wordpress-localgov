@@ -14,7 +14,8 @@
 		
 		<?php foreach( $featured_posts as $i => $post ) : setup_postdata( $post ); ?>
 		
-		<div class="row lg-slide lg-slide-<?php echo $i ?> item<?php echo ($i == 0) ? ' active' : '' ?>">
+		<div class="lg-slide lg-slide-<?php echo $i ?> item<?php echo ($i == 0) ? ' active' : '' ?>">
+			<div class="row">	
 				<div class="col-md-4 lg-slide-col-content">
 					<div class="lg-slide-content">
 	
@@ -59,6 +60,7 @@
 						}
 					?>
 				</div>
+			</div><!-- /.row -->
 		</div><!-- /.lg-slide -->
 		
 		<?php endforeach; wp_reset_postdata(); ?>

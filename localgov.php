@@ -6,6 +6,8 @@ Description: Wordpress plugin designed for local government including towns, cit
 Version: 1.0-alpha
 Author: Heather Shelley
 Author URI: 
+Text Domain: localgov
+Network: true
 License:
 */
 

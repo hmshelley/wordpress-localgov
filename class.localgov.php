@@ -20,6 +20,8 @@ class Localgov {
 		'twitter',
 		'submenu'
 	);
+	
+	public $modules_loaded = false;
 
 	private function __construct() {
 		/* Don't do anything, needs to be initialized via instance() method */
@@ -40,7 +42,7 @@ class Localgov {
 		
 		// Load modules to register the rewrite rules
 		self::load_modules();
-		
+
 		self::register_types();
 		
 		flush_rewrite_rules();
@@ -77,6 +79,12 @@ class Localgov {
 	 */
 	public static function load_modules() {
 
+		$Localgov = self::instance();
+		
+		if( $Localgov->modules_loaded ) {
+			return;
+		}
+
 		$modules = self::get_active_modules();
 		
 		foreach ( $modules as $module ) {
@@ -89,6 +97,8 @@ class Localgov {
 		
 			require $path;
 		}
+	
+		$Localgov->modules_loaded = true;
 
 		do_action( 'lg_modules_loaded' );
 	}

@@ -41,14 +41,17 @@ class Submenus_Module {
 			$start_depth = $args->lg_start_depth;
 		}
 		
-		$current = array_pop( wp_filter_object_list( $items, array( 
+		$current_list = wp_filter_object_list( $items, array( 
 			'current' => true
-		) ) );
+		));
+		$current = array_pop( $current_list );
 		
 		$current_depth = 0;
 		$parent = $current;
 		while( $parent ) {
-			$parent = array_pop( wp_filter_object_list( $items, array( 'ID' => $parent->menu_item_parent ) ) );
+			
+			$parent_list = wp_filter_object_list( $items, array( 'ID' => $parent->menu_item_parent ) );
+			$parent = array_pop( $parent_list );
 			$ancestors[] = $parent;
 			$current_depth++;
 		}

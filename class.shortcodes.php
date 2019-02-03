@@ -28,7 +28,7 @@ class Shortcodes {
 		add_shortcode( 'lgarchives', array( __CLASS__, 'lgarchives' ) );
 		add_shortcode( 'lgdirectory', array( __CLASS__, 'lgdirectory' ) );
 		add_shortcode( 'lgfeatured', array( __CLASS__, 'lgfeatured' ) );
-		
+		add_shortcode( 'lgsubmenu', array( __CLASS__, 'lgsubmenu' ) );
 	}
 	
 	public static function current_date( $atts ) {
@@ -141,6 +141,27 @@ class Shortcodes {
 		}
 		
 		return lg_get_featured( $args );
+	}
+	
+	public static function lgsubmenu( $atts ) {
+	
+		$args_key_map = array(
+			'startdepth' => 'start_depth',
+			'maxdepth' => 'max_depth'
+		);
+		
+		$args = array();
+		
+		if ( !empty( $atts) ) {
+			foreach( $atts as $key => $att ) {
+				if( isset( $args_key_map[$key] ) ) {
+					$args[$args_key_map[$key]] = $att;
+				}
+			}
+		}
+		
+		return lg_submenu( $args );
+	
 	}
 }
 

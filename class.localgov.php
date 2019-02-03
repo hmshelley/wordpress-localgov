@@ -22,6 +22,7 @@ class Localgov {
 	);
 	
 	public $modules_loaded = false;
+	public $widgets_loaded = false;
 
 	private function __construct() {
 		/* Don't do anything, needs to be initialized via instance() method */
@@ -65,7 +66,9 @@ class Localgov {
 		
 		foreach( $modules as $module ) {
 		
-			$class = preg_replace('/(?:^|_)(.?)/e',"strtoupper('$1')", $module); 
+			$class = preg_replace_callback('/_([a-z]?)/', function($match) {
+            	return strtoupper($match[1]);
+        	}, $module);
 			$class = "localgov\\" . $class . '_Module';
 			
 			if( method_exists ( $class, 'register_types' ) ) {
@@ -133,6 +136,12 @@ class Localgov {
 	 */
 	public static function load_widgets() {
 
+		$Localgov = self::instance();
+		
+		if( $Localgov->widgets_loaded ) {
+			return;
+		}
+		
 		$widgets = self::get_active_widgets();
 		
 		foreach ( $widgets as $widget ) {
@@ -145,8 +154,31 @@ class Localgov {
 			}
 		
 			require $path;
+			
 		}
 		
+		add_action( 'widgets_init', array( 'localgov\Localgov', 'register_widgets') );
+		
+		$Localgov->widgets_loaded = true;
+		
+		do_action( 'lg_widgets_loaded' );
+	}
+	
+	/**
+	 * Registers all active widgets
+	 */
+	public static function register_widgets() {
+		$widgets = self::get_active_widgets();
+		
+		foreach ( $widgets as $widget ) {
+		
+			$class = preg_replace_callback('/_([a-z]?)/', function($match) {
+            	return strtoupper($match[1]);
+        	}, $widget);
+			$class = "localgov\\" . $class . '_Widget';
+		
+			register_widget( $class );
+		}
 	}
 
 	/**

@@ -33,7 +33,22 @@ class Submenu_Widget extends \WP_Widget {
 	public function widget( $args, $instance ) {
 		
 		$title = apply_filters( 'widget_title', $instance['title'] );
-			
+		
+		$content = $this->content( $args, $instance);
+		
+		echo $args['before_widget'];
+		
+		if( !empty( $instance['title']) ) {
+			echo $args['before_title'] . $title . $args['after_title'];
+		}
+		
+		echo $content;
+		
+		echo $args['after_widget'];
+	}
+	
+	public function content( $instance=array() ) {
+		
 		$depth = 2;
 		$start_depth = self::$start_depth;
 		$max_depth = self::$max_depth;
@@ -69,15 +84,8 @@ class Submenu_Widget extends \WP_Widget {
 			return;
 		}
 		
-		echo $args['before_widget'];
+		return $nav_menu;
 		
-		if( !empty( $instance['title']) ) {
-			echo $args['before_title'] . $title . $args['after_title'];
-		}
-		
-		echo $nav_menu;
-		
-		echo $args['after_widget'];
 	}
 	
 	
@@ -131,5 +139,3 @@ class Submenu_Widget extends \WP_Widget {
 		return $instance;
 	}
 }
-
-register_widget( 'localgov\Submenu_Widget' );

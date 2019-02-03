@@ -62,11 +62,10 @@ if ( is_admin() ) {
 	localgov_load_class( 'localgov\Settings' );
 	localgov_load_class( 'localgov\NetworkSettings' );
 }
-	
-require_once __DIR__ . '/template_tags.php';
 
 localgov\Localgov::load_modules();
+localgov\Localgov::load_widgets();
+
+require_once __DIR__ . '/template_tags.php';
 
 localgov_load_class( 'localgov\Shortcodes' );
-
-add_action( 'widgets_init', array( 'localgov\Localgov', 'load_widgets' ) );

@@ -308,3 +308,36 @@ function lg_get_archives( $args ) {
 		return ob_get_clean();
 	}
 }
+
+function lg_submenu( $args ) {
+	
+	$defaults = array (
+		'start_depth' => 1, 
+		'max_depth' => 3
+	);
+	
+	/**
+	 * Filter the default args
+	 * 
+	 * @param array  $defaults
+	 * @param array  $args
+	 */
+	$defaults = apply_filters( 'lg_submenu_default_args', $defaults , $args );
+	
+	$args = wp_parse_args( $args, $defaults );
+	
+	/**
+	 * Filter the args
+	 * 
+	 * @param array  $args
+	 */
+	$args = apply_filters( 'lg_submenu_args', $args );
+	
+	if( ! class_exists('localgov\Submenu_Widget') ) {
+		return;
+	}
+	$Submenu_Widget = new localgov\Submenu_Widget;
+	
+	return $Submenu_Widget->content($args);
+
+}

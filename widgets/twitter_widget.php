@@ -131,5 +131,3 @@ class Twitter_Widget extends \WP_Widget {
 		return $instance;
 	}
 }
-
-register_widget( 'localgov\Twitter_Widget' );

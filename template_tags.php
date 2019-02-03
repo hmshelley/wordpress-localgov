@@ -54,7 +54,7 @@ function lg_paging_nav() {
 function lg_get_breadcrumbs() {
 	
 	$html = '<ol class="breadcrumb">';
-	$html .= '<li><a href="' . get_home_url() . '"><span class="glyphicon-home"></span></a></li>';
+	$html .= '<li><a href="' . get_home_url() . '"><span class="icon-home"></span></a></li>';
 	
 	if( is_single() && get_post_type() == 'post' ) {
 		$html .= '<li>' . get_the_category_list( ', ' ) . '</li>';

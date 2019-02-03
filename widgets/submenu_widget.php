@@ -36,6 +36,11 @@ class Submenu_Widget extends \WP_Widget {
 		
 		$content = $this->content( $args, $instance);
 		
+		// Don't show if there is no content
+		if( empty( $content ) ) {
+			return;
+		}
+		
 		echo $args['before_widget'];
 		
 		if( !empty( $instance['title']) ) {

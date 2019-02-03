@@ -100,7 +100,7 @@ class Featured_Module {
 		
 	}
 	
-	public function cmb2_init() {
+	public static function cmb2_init() {
 	
 		$featured_metabox = new_cmb2_box( array(
 			'id' => LG_PREFIX . 'featured',

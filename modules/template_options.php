@@ -31,7 +31,7 @@ class TemplateOptions_Module {
 		add_action( 'cmb2_init', array( __CLASS__, 'cmb2_init' ) );
 	}
 	
-	public function cmb2_init() {
+	public static function cmb2_init() {
 		
 		$template_metabox = new_cmb2_box( array(
 			'id' => LG_PREFIX . 'template_options',

@@ -69,3 +69,4 @@ localgov\Localgov::load_widgets();
 require_once __DIR__ . '/template_tags.php';
 
 localgov_load_class( 'localgov\Shortcodes' );
+localgov_load_class( 'localgov\WpOffloadMedia' );

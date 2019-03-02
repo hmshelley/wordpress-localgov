@@ -47,7 +47,7 @@ class WpOffloadMedia {
 			if( $provider ) {
 				$url = $as3cf->get_attachment_provider_url( $file_id, $provider );
 	
-				return array($url);
+				return array( $url );
 			}
 		} else if(
 			isset( $meta_key ) 
@@ -59,23 +59,29 @@ class WpOffloadMedia {
 			// Get value since no value passed in
 			remove_filter( 'get_post_metadata', array( $this, 'filter_post_metadata'), 10 );
 			$files = get_post_meta( $post_id, $meta_key, true );
-			//add_filter( 'get_post_metadata',  array( $this, 'filter_post_metadata'), 10, 4 );
+			add_filter( 'get_post_metadata',  array( $this, 'filter_post_metadata'), 10, 4 );
 			
-			foreach( $files as $key => $file ) {
-				
-				$provider = $as3cf->is_attachment_served_by_provider( $file['file_id'], false );
-				
-				if( $provider ) {
-				
-					$url = $as3cf->get_attachment_provider_url( $file['file_id'], $provider );
-				
-					$files[$key]['file'] = $as3cf->get_attachment_provider_url( $file['file_id'], $provider );
-					
+			if( !empty( $files ) ) {
+			
+				if( is_string( $files ) ) {
+					$files = unserialize( $files );
 				}
-			}
+				
+				foreach( $files as &$file ) {
+				
+					$provider = $as3cf->is_attachment_served_by_provider( $file['file_id'], false );
+				
+					if( $provider ) {
+				
+						$url = $as3cf->get_attachment_provider_url( $file['file_id'], $provider );
+				
+						$file['file'] = $as3cf->get_attachment_provider_url( $file['file_id'], $provider );
+					}
+				}
 			
-			return array( $files );
-			
+				return array( $files );
+				
+			}			
 		}
 		
 		return $value;

@@ -5,9 +5,12 @@
  *
  * @return void
  */
-function lg_paging_nav() {
+function lg_paging_nav( $query = null ) {
+
+	$query = isset( $query ) ? $query : $GLOBALS['wp_query'];
+
 	// Don't print empty markup if there's only one page.
-	if ( $GLOBALS['wp_query']->max_num_pages < 2 ) {
+	if ( $query->max_num_pages < 2 ) {
 		return;
 	}
 
@@ -31,7 +34,7 @@ function lg_paging_nav() {
 		'type'     => 'list',
 		'base'     => $pagenum_link,
 		'format'   => $format,
-		'total'    => $GLOBALS['wp_query']->max_num_pages,
+		'total'    => $query->max_num_pages,
 		'current'  => $paged,
 		'mid_size' => 1,
 		'add_args' => array_map( 'urlencode', $query_args ),
@@ -105,14 +108,14 @@ function lg_get_breadcrumbs() {
 			$meeting_year = '';
 			
 			if( is_single() ) {
-				$meeting = get_post_meta( LG_PREFIX . 'meeting' );
+				$meeting = get_post_meta( get_the_ID(), LG_PREFIX . 'meeting', true );
 				
-				if( !empty( $meeting[0]['type'] ) ) {
-					$type_term = get_term_by( 'id', $meeting[0]['type'] , LG_PREFIX . 'meeting_type' );
+				if( !empty( $meeting['type'] ) ) {
+					$type_term = get_term_by( 'id', $meeting['type'] , LG_PREFIX . 'meeting_type' );
 				}
 				
-				if( !empty( $meeting[0]['date'] ) ) {
-					$meeting_year = date( 'Y', $meeting[0]['date'] );
+				if( !empty( $meeting['date'] ) ) {
+					$meeting_year = date( 'Y', $meeting['date'] );
 				}
 				
 			}
@@ -133,6 +136,27 @@ function lg_get_breadcrumbs() {
 					$url = add_query_arg( array( LG_PREFIX . 'meeting_year' => $meeting_year ), $url );
 					$html .= '<li><a href="' . $url . '">' . $meeting_year . '</a></li>';
 				}
+			}
+		}
+		else if( get_post_type() == LG_PREFIX . 'public_notice' ) {
+			
+			$public_notice_year =  '';
+			
+			if( get_query_var( LG_PREFIX . 'public_notice_year' ) ) {
+				$public_notice_year = get_query_var( LG_PREFIX . 'public_notice_year' );	
+			}
+			elseif( is_single() ) {
+				$public_notice_date = get_post_meta( get_the_ID(), LG_PREFIX . 'public_notice_date', true );
+				
+				if( !empty( $public_notice_date ) ) {
+					$public_notice_year = date( 'Y', $public_notice_date );
+				}	
+			}
+			
+			if( !empty( $public_notice_year ) ) {
+				$url = get_post_type_archive_link( LG_PREFIX . 'public_notice' );
+				$url = add_query_arg( array( LG_PREFIX . 'public_notice_year' => $public_notice_year ), $url );
+				$html .= '<li><a href="' . $url . '">' . $public_notice_year . '</a></li>';
 			}
 		}
 	}
@@ -184,21 +208,24 @@ function lg_get_archives( $args ) {
 	 */
 	$args = apply_filters( 'lg_get_archives_args', $args );
 	
-	$WP_Query = new WP_Query;
-	$WP_Query->lg_is_archives = true;
+	$query = new WP_Query;
+	$query->lg_is_archives = true;
+	
+	$paged = get_query_var( 'paged' ) ? intval( get_query_var( 'paged' ) ) : 1;
 	
 	$query_args = array(
 		'post_type' => $args['post_type'],
 		'post_status' => 'publish',
 		'posts_per_page' => $args['posts_per_page'],
 		'meta_query' => $args['meta_query'],
-		'orderby' => $args['order_by']
+		'orderby' => $args['order_by'],
+		'paged' => $paged
 	);
 	
 	if( !is_array( $args['order_by'] ) ) {
 		$query_args['order'] = $args['order'];
 	}
-
+	
 	// Use a date other than post_date to group posts
 	$date_field = 'post_date';
 	
@@ -216,7 +243,7 @@ function lg_get_archives( $args ) {
 		}
 	}
 	
-	$WP_Query->lg_date_field = $date_field;
+	$query->lg_date_field = $date_field;
 	
 	
 	if ( 'yearly' == $args['type'] ) {
@@ -226,29 +253,29 @@ function lg_get_archives( $args ) {
 	} elseif ( 'postbypost' == $args['type'] ) {
 		
 		// Set params on WP_Query object so they are available in filters
-		$WP_Query->lg_post_group_by = $args['post_group_by'];
-		$WP_Query->lg_post_group_offset = $args['post_group_offset'];
-		$WP_Query->lg_post_group_order = $args['post_group_order'];
+		$query->lg_post_group_by = $args['post_group_by'];
+		$query->lg_post_group_offset = $args['post_group_offset'];
+		$query->lg_post_group_order = $args['post_group_order'];
 		
-		add_filter( 'posts_fields', function( $fields, $WP_Query ) {
+		add_filter( 'posts_fields', function( $fields, $query ) {
 			
-			if( empty( $WP_Query->lg_post_group_by ) ) {
+			if( empty( $query->lg_post_group_by ) ) {
 				return $fields;
 			}
 			
-			switch( $WP_Query->lg_post_group_by ) {
+			switch( $query->lg_post_group_by ) {
 			
 				case 'year':
-					$lg_archives_group = ", YEAR($WP_Query->lg_date_field) AS `lg_archives_group`";
+					$lg_archives_group = ", YEAR($query->lg_date_field) AS `lg_archives_group`";
 					
-					if( !empty( $WP_Query->lg_post_group_offset ) ) {
-						$lg_archives_group = ", CONCAT( YEAR($WP_Query->lg_date_field-INTERVAL $WP_Query->lg_post_group_offset), '-', 1+YEAR($WP_Query->lg_date_field-INTERVAL $WP_Query->lg_post_group_offset)) AS `lg_archives_group`";
+					if( !empty( $query->lg_post_group_offset ) ) {
+						$lg_archives_group = ", CONCAT( YEAR($query->lg_date_field-INTERVAL $query->lg_post_group_offset), '-', 1+YEAR($query->lg_date_field-INTERVAL $query->lg_post_group_offset)) AS `lg_archives_group`";
 					}
 					
 					break;
 				
 				default:
-					$lg_archives_group = ", $WP_Query->lg_post_group_by AS `lg_archives_group`";
+					$lg_archives_group = ", $query->lg_post_group_by AS `lg_archives_group`";
 			}
 			
 			$fields .= $lg_archives_group;
@@ -258,14 +285,14 @@ function lg_get_archives( $args ) {
 		}, 10, 2 );
 		
 		
-		add_filter( 'posts_orderby', function( $orderby, $WP_Query ) {
+		add_filter( 'posts_orderby', function( $orderby, $query ) {
 			
-			if( empty( $WP_Query->lg_post_group_by ) ) {
+			if( empty( $query->lg_post_group_by ) ) {
 				return $orderby;
 			}
 			
 			$post_group_order = 'ASC';
-			if( 'DESC' == strtoupper( $WP_Query->lg_post_group_order ) ) {
+			if( 'DESC' == strtoupper( $query->lg_post_group_order ) ) {
 				$post_group_order = 'DESC';
 			}
 			
@@ -280,8 +307,8 @@ function lg_get_archives( $args ) {
 		}, 10, 2 );
 		
 		
-		$posts = $WP_Query->query( $query_args );
-		//echo $WP_Query->request;
+		$posts = $query->query( $query_args );
+		//echo $query->request;
 		
 		$grouped_results = array( $posts );
 		

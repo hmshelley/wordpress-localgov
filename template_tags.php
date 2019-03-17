@@ -71,21 +71,6 @@ function lg_get_breadcrumbs() {
 			$html .= '<li><a href="' . get_permalink( $ancestor ) . '" title="' . get_the_title( $ancestor ) . '">' . get_the_title( $ancestor ) . '</a></li>';
 		}
 	}
-	elseif( is_tag() ) {
-		$html .= '<li>' . get_single_tag_title() . '</li>';
-	}
-	elseif( is_day() ) {
-		$html .= '<li>Archive for ' . get_the_time( 'F jS, Y' ) . ' Archive</li>';
-	}
-	elseif( is_month() ) {
-		$html .= '<li>Archive for ' . get_the_time( 'F, Y' ) . ' Archive</li>';
-	}
-	elseif( is_year() ) {
-		$html .= '<li>' . get_the_time( 'Y' ) . ' Archive</li>';
-	}
-	elseif( is_author() ) {
-		$html .= '<li>Author Archive</li>';
-	}
 	elseif( is_search() ) {
 		$html .= '<li>Search Results</li>';
 	}
@@ -159,7 +144,34 @@ function lg_get_breadcrumbs() {
 				$html .= '<li><a href="' . $url . '">' . $public_notice_year . '</a></li>';
 			}
 		}
+		else if( get_post_type() == LG_PREFIX . 'press_release' ) {
+			
+			$year = get_the_date( 'Y' );
+			$url = get_year_link( $year );
+			$url .= '?post_type=' . LG_PREFIX . 'press_release';
+			
+			$html .= "<li><a href=\"$url\">$year</a></li>";
+		}
 	}
+	elseif( is_author() ) {
+		$html .= '<li>Author Archive</li>';
+	}
+	elseif( is_tag() ) {
+		$html .= '<li>' . get_single_tag_title() . '</li>';
+	}
+	elseif( is_day() ) {
+		$html .= '<li>' . get_the_time( 'F jS, Y' ) . '</li>';
+	}
+	elseif( is_month() ) {
+		$html .= '<li>' . get_the_time( 'F, Y' ) . '</li>';
+	}
+	elseif( is_year() ) {
+		$year = get_the_date( 'Y' );
+		$url = get_year_link( $year );
+	
+		$html .= "<li><a href=\"$url\">$year</a></li>";
+	}
+	
 	
 	$html .= '</ol>';
 	
@@ -248,7 +260,12 @@ function lg_get_archives( $args ) {
 	
 	if ( 'yearly' == $args['type'] ) {
 		
-		// TODO: Implement yearly archives
+		if( $args['date_key'] == 'post_date' ) {
+			return wp_get_archives( array( 
+				'type' => 'yearly',
+				'post_type' => $args['post_type']
+			) );
+		}
 		
 	} elseif ( 'postbypost' == $args['type'] ) {
 		

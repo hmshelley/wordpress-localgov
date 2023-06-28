@@ -42,11 +42,12 @@ class WpOffloadMedia {
 			
 			$file_id = get_post_meta( $post_id, $meta_key . '_id', true );
 			
-			$provider = $as3cf->is_attachment_served_by_provider( $file_id, false );
+			$as3cf_item = $as3cf->is_attachment_served_by_provider( $file_id, false );
 			
-			if( $provider ) {
-				$url = $as3cf->get_attachment_provider_url( $file_id, $provider );
-	
+			if( $as3cf_item ) {
+				//$url = $as3cf->get_attachment_provider_url( $file_id, $as3cf_item );
+				$url = $as3cf_item->get_provider_url();
+				
 				return array( $url );
 			}
 		} else if(
@@ -69,13 +70,12 @@ class WpOffloadMedia {
 				
 				foreach( $files as &$file ) {
 				
-					$provider = $as3cf->is_attachment_served_by_provider( $file['file_id'], false );
+					$as3cf_item = $as3cf->is_attachment_served_by_provider( $file['file_id'], false );
 				
-					if( $provider ) {
+					if( $as3cf_item ) {
 				
-						$url = $as3cf->get_attachment_provider_url( $file['file_id'], $provider );
-				
-						$file['file'] = $as3cf->get_attachment_provider_url( $file['file_id'], $provider );
+						//$file['file'] = $as3cf->get_attachment_provider_url( $file['file_id'], $as3cf_item );
+						$file['file'] = $as3cf_item->get_provider_url();
 					}
 				}
 			

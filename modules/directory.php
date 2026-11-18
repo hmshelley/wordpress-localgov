@@ -409,7 +409,7 @@ class Directory_Module {
     	$this->print_messages();
 	}
 	
-	public function filter_member_field_value( $field_value, $field_name, $member, $args ) {
+	public static function filter_member_field_value( $field_value, $field_name, $member, $args ) {
 		
 		$member_link = '<a href="' . get_permalink() . '"';
 		if( !empty( $args['template_options']['member_link_attributes'] ) ) {
@@ -463,7 +463,7 @@ class Directory_Module {
 		return $field_value;
 	}
 	
-	public function filter_member_field_header( $field_name ) {
+	public static function filter_member_field_header( $field_name ) {
 		$field_header = str_replace( '_', ' ', $field_name );
 		$field_header = ucwords( $field_header );
 		

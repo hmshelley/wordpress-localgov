@@ -63,7 +63,7 @@ class Featured_Module {
 	
 	public static $max_posts = 15;
 	
-	public static $post_types = array( 'post', 'page', 'lg_directory_member', 'tribe_events' );	
+	public static $post_types = array( 'post', 'page', 'tribe_events' );
 
 	private function __construct() {
 		/* Don't do anything, needs to be initialized via instance() method */

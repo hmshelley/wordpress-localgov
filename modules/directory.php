@@ -73,6 +73,7 @@ class Directory_Module {
 	public function setup() {
 		
 		add_action( 'init', array( $this, 'init' ) );
+		add_action( 'pre_get_posts', array( $this, 'exclude_post_types_from_search' ) );
 		add_action( 'cmb2_init', array( $this, 'cmb2_init' ) );
 		add_action( 'admin_menu', array( $this ,'add_import_page' ) );
 		
@@ -109,6 +110,27 @@ class Directory_Module {
 	public function init() {
 	
 		self::register_types();	
+	}
+	
+	function exclude_post_types_from_search( $query ) {
+	
+		// Only affect the main front-end search query
+		if ( is_admin() || ! $query->is_main_query() || ! $query->is_search() ) {
+			return;
+		}
+	
+		// List the post type slugs you want to remove
+		$excluded_types = array( LG_PREFIX . 'directory_member' );
+	
+		// Get all currently searchable post types
+		$searchable_types = get_post_types( array( 'exclude_from_search' => false ) );
+	
+		if ( is_array( $searchable_types ) ) {
+			foreach ( $excluded_types as $type ) {
+				unset( $searchable_types[ $type ] );
+			}
+			$query->set( 'post_type', $searchable_types );
+		}
 	}
 	
 	function cmb2_init() {
